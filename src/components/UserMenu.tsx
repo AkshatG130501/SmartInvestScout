@@ -75,3 +75,5 @@ const UserMenu: React.FC = () => {
     </div>
   );
 };
+
+export default UserMenu
