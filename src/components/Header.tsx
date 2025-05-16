@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, BarChart2, Menu, X } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,6 +17,43 @@ const Header: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in:', error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <header
@@ -65,13 +105,30 @@ const Header: React.FC = () => {
             >
               Pricing
             </Link>
-            <Link
-              to="/dashboard"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium transition-colors duration-300 flex items-center space-x-2"
-            >
-              <Search className="h-4 w-4" />
-              <span>Get Started</span>
-            </Link>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <Link
+                  to="/dashboard"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium transition-colors duration-300 flex items-center space-x-2"
+                >
+                  <Search className="h-4 w-4" />
+                  <span>Dashboard</span>
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-300"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleSignIn}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium transition-colors duration-300 flex items-center space-x-2"
+              >
+                <span>Sign in with Google</span>
+              </button>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -109,14 +166,37 @@ const Header: React.FC = () => {
             >
               Pricing
             </Link>
-            <Link
-              to="/dashboard"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-300 flex items-center justify-center space-x-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Search className="h-4 w-4" />
-              <span>Get Started</span>
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-300 flex items-center justify-center space-x-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Search className="h-4 w-4" />
+                  <span>Dashboard</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    handleSignOut();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-300"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  handleSignIn();
+                  setMobileMenuOpen(false);
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-300 flex items-center justify-center space-x-2"
+              >
+                <span>Sign in with Google</span>
+              </button>
+            )}
           </nav>
         </div>
       )}
