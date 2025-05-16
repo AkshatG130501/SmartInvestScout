@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, BarChart2, Menu, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import UserMenu from './UserMenu';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -31,16 +32,6 @@ const Header: React.FC = () => {
       if (error) throw error;
     } catch (error) {
       console.error('Error signing in:', error);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      navigate('/');
-    } catch (error) {
-      console.error('Error signing out:', error);
     }
   };
 
@@ -103,12 +94,7 @@ const Header: React.FC = () => {
                   <Search className="h-4 w-4" />
                   <span>Dashboard</span>
                 </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-300"
-                >
-                  Sign Out
-                </button>
+                <UserMenu />
               </div>
             ) : (
               <button
@@ -165,15 +151,7 @@ const Header: React.FC = () => {
                   <Search className="h-4 w-4" />
                   <span>Dashboard</span>
                 </Link>
-                <button
-                  onClick={() => {
-                    handleSignOut();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-300"
-                >
-                  Sign Out
-                </button>
+                <UserMenu />
               </>
             ) : (
               <button

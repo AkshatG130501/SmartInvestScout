@@ -6,6 +6,8 @@ import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import SearchResults from './pages/SearchResults';
 import Chat from './pages/Chat';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -13,19 +15,17 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/dashboard" element={
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/search/:query" element={<SearchResults />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/profile" element={
             <ProtectedRoute>
-              <Dashboard />
+              <Profile />
             </ProtectedRoute>
           } />
-          <Route path="/search/:query" element={
+          <Route path="/settings" element={
             <ProtectedRoute>
-              <SearchResults />
-            </ProtectedRoute>
-          } />
-          <Route path="/chat" element={
-            <ProtectedRoute>
-              <Chat />
+              <Settings />
             </ProtectedRoute>
           } />
         </Routes>
