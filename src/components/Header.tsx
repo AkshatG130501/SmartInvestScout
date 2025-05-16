@@ -1,37 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, BarChart2, Menu, X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
-import UserMenu from './UserMenu';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { BarChart2, Menu, X } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "../contexts/AuthContext";
+import UserMenu from "./UserMenu";
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleSignIn = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
-        }
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
       });
-      
+
       if (error) throw error;
     } catch (error) {
-      console.error('Error signing in:', error);
+      console.error("Error signing in:", error);
     }
   };
 
@@ -39,8 +38,8 @@ const Header: React.FC = () => {
     <header
       className={`fixed w-full z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-sm shadow-sm py-3'
-          : 'bg-transparent py-5'
+          ? "bg-white/95 backdrop-blur-sm shadow-sm py-3"
+          : "bg-transparent py-5"
       }`}
     >
       <div className="container mx-auto px-4 md:px-6">
@@ -52,7 +51,7 @@ const Header: React.FC = () => {
             <BarChart2 className="h-7 w-7 text-indigo-600" strokeWidth={2.5} />
             <span
               className={`transition-colors duration-300 ${
-                isScrolled ? 'text-gray-900' : 'text-gray-800'
+                isScrolled ? "text-gray-900" : "text-gray-800"
               }`}
             >
               SmartInvest Scout
@@ -64,7 +63,9 @@ const Header: React.FC = () => {
             <Link
               to="#"
               className={`font-medium transition-colors duration-300 ${
-                isScrolled ? 'text-gray-600 hover:text-indigo-700' : 'text-gray-700 hover:text-indigo-600'
+                isScrolled
+                  ? "text-gray-600 hover:text-indigo-700"
+                  : "text-gray-700 hover:text-indigo-600"
               }`}
             >
               About
@@ -72,7 +73,9 @@ const Header: React.FC = () => {
             <Link
               to="#"
               className={`font-medium transition-colors duration-300 ${
-                isScrolled ? 'text-gray-600 hover:text-indigo-700' : 'text-gray-700 hover:text-indigo-600'
+                isScrolled
+                  ? "text-gray-600 hover:text-indigo-700"
+                  : "text-gray-700 hover:text-indigo-600"
               }`}
             >
               Features
@@ -80,20 +83,15 @@ const Header: React.FC = () => {
             <Link
               to="#"
               className={`font-medium transition-colors duration-300 ${
-                isScrolled ? 'text-gray-600 hover:text-indigo-700' : 'text-gray-700 hover:text-indigo-600'
+                isScrolled
+                  ? "text-gray-600 hover:text-indigo-700"
+                  : "text-gray-700 hover:text-indigo-600"
               }`}
             >
               Pricing
             </Link>
             {user ? (
               <div className="flex items-center space-x-4">
-                <Link
-                  to="/dashboard"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium transition-colors duration-300 flex items-center space-x-2"
-                >
-                  <Search className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </Link>
                 <UserMenu />
               </div>
             ) : (
@@ -111,7 +109,11 @@ const Header: React.FC = () => {
             className="md:hidden text-gray-700 focus:outline-none"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </button>
         </div>
       </div>
@@ -143,14 +145,6 @@ const Header: React.FC = () => {
             </Link>
             {user ? (
               <>
-                <Link
-                  to="/dashboard"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-300 flex items-center justify-center space-x-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Search className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </Link>
                 <UserMenu />
               </>
             ) : (
