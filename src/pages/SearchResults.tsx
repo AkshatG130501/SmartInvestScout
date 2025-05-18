@@ -1,15 +1,15 @@
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  MessageSquare, 
-  AlertTriangle, 
-  TrendingUp, 
+import React, { useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  MessageSquare,
+  AlertTriangle,
+  TrendingUp,
   Newspaper,
-  ExternalLink
-} from 'lucide-react';
-import Button from '../components/Button';
+  ExternalLink,
+} from "lucide-react";
+import Button from "../components/Button";
 
 const SearchResults: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const SearchResults: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate("/dashboard")}
             className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors duration-200"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
@@ -35,7 +35,9 @@ const SearchResults: React.FC = () => {
             label="Ask About This"
             icon="external-link"
             primary
-            onClick={() => {/* TODO: Implement chat functionality */}}
+            onClick={() => {
+              /* TODO: Implement chat functionality */
+            }}
           />
         </div>
 
@@ -68,26 +70,28 @@ const SearchResults: React.FC = () => {
                 <div className="bg-indigo-100 rounded-lg p-2">
                   <TrendingUp className="h-6 w-6 text-indigo-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Market Summary</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Market Summary
+                </h2>
               </div>
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">What's Happening</h3>
-                  <p className="text-gray-600">
-                    Loading market insights...
-                  </p>
+                  <h3 className="font-medium text-gray-900 mb-2">
+                    What's Happening
+                  </h3>
+                  <p className="text-gray-600">Loading market insights...</p>
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">Key Drivers</h3>
-                  <p className="text-gray-600">
-                    Loading key drivers...
-                  </p>
+                  <h3 className="font-medium text-gray-900 mb-2">
+                    Key Drivers
+                  </h3>
+                  <p className="text-gray-600">Loading key drivers...</p>
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">Market Reaction</h3>
-                  <p className="text-gray-600">
-                    Loading market reaction...
-                  </p>
+                  <h3 className="font-medium text-gray-900 mb-2">
+                    Market Reaction
+                  </h3>
+                  <p className="text-gray-600">Loading market reaction...</p>
                 </div>
               </div>
             </motion.div>
@@ -103,11 +107,16 @@ const SearchResults: React.FC = () => {
                 <div className="bg-blue-100 rounded-lg p-2">
                   <Newspaper className="h-6 w-6 text-blue-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Latest News</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Latest News
+                </h2>
               </div>
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="border-b border-gray-100 last:border-0 pb-4 last:pb-0">
+                  <div
+                    key={i}
+                    className="border-b border-gray-100 last:border-0 pb-4 last:pb-0"
+                  >
                     <h3 className="font-medium text-gray-900 mb-1">
                       Loading news headline...
                     </h3>
@@ -133,18 +142,24 @@ const SearchResults: React.FC = () => {
                 <div className="bg-amber-100 rounded-lg p-2">
                   <AlertTriangle className="h-6 w-6 text-amber-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Risk Factors</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Risk Factors
+                </h2>
               </div>
               <div className="space-y-3">
-                {['Regulatory', 'Competition', 'Product Delays'].map((risk, i) => (
-                  <div key={i} className="flex items-start space-x-3">
-                    <div className="w-2 h-2 rounded-full bg-amber-500 mt-2" />
-                    <div>
-                      <h3 className="font-medium text-gray-900">{risk}</h3>
-                      <p className="text-sm text-gray-600">Loading risk details...</p>
+                {["Regulatory", "Competition", "Product Delays"].map(
+                  (risk, i) => (
+                    <div key={i} className="flex items-start space-x-3">
+                      <div className="w-2 h-2 rounded-full bg-amber-500 mt-2" />
+                      <div>
+                        <h3 className="font-medium text-gray-900">{risk}</h3>
+                        <p className="text-sm text-gray-600">
+                          Loading risk details...
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </motion.div>
 
@@ -159,13 +174,15 @@ const SearchResults: React.FC = () => {
                 <div className="bg-purple-100 rounded-lg p-2">
                   <MessageSquare className="h-6 w-6 text-purple-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Ask Follow-up</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Ask Follow-up
+                </h2>
               </div>
               <div className="space-y-3">
                 {[
                   "What should I know as a long-term investor?",
                   "What are the growth prospects?",
-                  "How does this compare to competitors?"
+                  "How does this compare to competitors?",
                 ].map((question, i) => (
                   <button
                     key={i}
