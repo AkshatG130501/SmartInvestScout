@@ -1,18 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Search, 
-  Send,
-  Bot,
-  User,
-  Loader2
-} from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Search, Send, Bot, User, Loader2 } from "lucide-react";
 
 interface Message {
   id: string;
-  type: 'user' | 'ai';
+  type: "user" | "ai";
   content: string;
   timestamp: Date;
 }
@@ -21,18 +14,18 @@ const suggestedPrompts = [
   "What's driving Apple's Q2 rally?",
   "Is Microsoft's cloud growth sustainable?",
   "Explain the impact of rising interest rates on tech stocks",
-  "What are the key risks for Tesla in 2024?"
+  "What are the key risks for Tesla in 2024?",
 ];
 
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -40,7 +33,7 @@ const Chat: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
-    document.title = 'Ask Anything - SmartInvest Scout';
+    document.title = "Ask Anything - SmartInvest Scout";
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,24 +42,25 @@ const Chat: React.FC = () => {
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      type: 'user',
+      type: "user",
       content: input,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
     setIsTyping(true);
 
     // Simulate AI response
     setTimeout(() => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: 'This is a placeholder response. Integration with Sonar API will provide real-time investment insights.',
-        timestamp: new Date()
+        type: "ai",
+        content:
+          "This is a placeholder response. Integration with Sonar API will provide real-time investment insights.",
+        timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, aiMessage]);
       setIsTyping(false);
     }, 1500);
   };
@@ -75,10 +69,16 @@ const Chat: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex items-start space-x-3 ${message.type === 'ai' ? 'bg-white' : 'bg-indigo-50'} rounded-lg p-4 mb-4`}
+      className={`flex items-start space-x-3 ${
+        message.type === "ai" ? "bg-white" : "bg-indigo-50"
+      } rounded-lg p-4 mb-4`}
     >
-      <div className={`p-2 rounded-lg ${message.type === 'ai' ? 'bg-indigo-100' : 'bg-indigo-200'}`}>
-        {message.type === 'ai' ? (
+      <div
+        className={`p-2 rounded-lg ${
+          message.type === "ai" ? "bg-indigo-100" : "bg-indigo-200"
+        }`}
+      >
+        {message.type === "ai" ? (
           <Bot className="h-5 w-5 text-indigo-600" />
         ) : (
           <User className="h-5 w-5 text-indigo-700" />
@@ -87,7 +87,7 @@ const Chat: React.FC = () => {
       <div className="flex-1">
         <div className="flex items-center justify-between mb-1">
           <span className="font-medium text-gray-900">
-            {message.type === 'ai' ? 'SmartInvest Scout' : 'You'}
+            {message.type === "ai" ? "SmartInvest Scout" : "You"}
           </span>
           <span className="text-sm text-gray-500">
             {message.timestamp.toLocaleTimeString()}
@@ -104,7 +104,7 @@ const Chat: React.FC = () => {
       <div className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate("/dashboard")}
             className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors duration-200"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
@@ -132,7 +132,8 @@ const Chat: React.FC = () => {
                 Ask me anything about investments
               </h2>
               <p className="text-gray-600 mb-8">
-                Get instant, AI-powered insights about stocks, market trends, and investment strategies
+                Get instant, AI-powered insights about stocks, market trends,
+                and investment strategies
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {suggestedPrompts.map((prompt, index) => (
@@ -148,7 +149,7 @@ const Chat: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {messages.map(message => (
+              {messages.map((message) => (
                 <MessageBubble key={message.id} message={message} />
               ))}
               {isTyping && (
@@ -178,9 +179,11 @@ const Chat: React.FC = () => {
               type="submit"
               disabled={!input.trim()}
               className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2
-                ${input.trim() 
-                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                ${
+                  input.trim()
+                    ? "bg-indigo-600 hover:bg-indigo-700 text-white"
+                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                }`}
             >
               <span>Send</span>
               <Send className="h-4 w-4" />

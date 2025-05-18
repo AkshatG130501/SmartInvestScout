@@ -1,6 +1,12 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Search, AlertCircle, BarChart, MessageSquare, Upload } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  Search,
+  AlertCircle,
+  BarChart,
+  MessageSquare,
+  Upload,
+} from "lucide-react";
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -9,7 +15,12 @@ interface FeatureCardProps {
   delay: number;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, delay }) => {
+const FeatureCard: React.FC<FeatureCardProps> = ({
+  icon,
+  title,
+  description,
+  delay,
+}) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -32,32 +43,40 @@ const HowItWorksSection: React.FC = () => {
     {
       icon: <Search className="h-6 w-6 text-indigo-600" />,
       title: "Search Any Stock or Topic",
-      description: "Simply type in a ticker symbol, company name, or investment topic to get started."
+      description:
+        "Simply type in a ticker symbol, company name, or investment topic to get started.",
     },
     {
       icon: <BarChart className="h-6 w-6 text-indigo-600" />,
       title: "Get AI-Powered Insights",
-      description: "Our AI analyzes thousands of sources to deliver relevant, contextualized information."
+      description:
+        "Our AI analyzes thousands of sources to deliver relevant, contextualized information.",
     },
     {
       icon: <AlertCircle className="h-6 w-6 text-indigo-600" />,
       title: "Understand Key Risks",
-      description: "Identify potential risks and market concerns that could impact your investment decisions."
+      description:
+        "Identify potential risks and market concerns that could impact your investment decisions.",
     },
     {
       icon: <MessageSquare className="h-6 w-6 text-indigo-600" />,
       title: "Ask Follow-Up Questions",
-      description: "Engage in a natural conversation to dive deeper into specific aspects of your research."
+      description:
+        "Engage in a natural conversation to dive deeper into specific aspects of your research.",
     },
     {
       icon: <Upload className="h-6 w-6 text-indigo-600" />,
       title: "Upload Financial Documents",
-      description: "Get instant summaries and analysis from earnings reports, 10-Ks, and other financial documents."
-    }
+      description:
+        "Get instant summaries and analysis from earnings reports, 10-Ks, and other financial documents.",
+    },
   ];
 
   return (
-    <section id="how-it-works" className="py-16 md:py-24 bg-gradient-to-b from-slate-100 to-white">
+    <section
+      id="how-it-works"
+      className="py-16 md:py-24 bg-gradient-to-b from-slate-100 to-white"
+    >
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -66,9 +85,13 @@ const HowItWorksSection: React.FC = () => {
           viewport={{ once: true }}
           className="text-center mb-12 md:mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            How It Works
+          </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            SmartInvest Scout simplifies investment research by leveraging AI to deliver actionable insights, helping you make better investment decisions.
+            SmartInvest Scout simplifies investment research by leveraging AI to
+            deliver actionable insights, helping you make better investment
+            decisions.
           </p>
         </motion.div>
 
