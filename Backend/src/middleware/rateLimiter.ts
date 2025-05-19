@@ -6,8 +6,8 @@ export const createRateLimiter = () => {
     windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
     max: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // Limit each IP to 100 requests per windowMs
     message: 'Too many requests from this IP, please try again later.',
-    handler: (req, res) => {
-      throw new AppError(429, 'Too many requests from this IP, please try again later.');
+    handler: (req, res, next) => {
+      next(new AppError(429, 'Too many requests from this IP, please try again later.'));
     },
     standardHeaders: true,
     legacyHeaders: false,
