@@ -1,12 +1,12 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React from 'react';
+import { motion } from 'framer-motion';
 import {
   Search,
   AlertCircle,
   BarChart,
   MessageSquare,
   Upload,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -26,7 +26,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
-      viewport={{ once: true, margin: "-100px" }}
+      viewport={{ once: true, margin: '-100px' }}
       className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6"
     >
       <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
@@ -42,33 +42,33 @@ const HowItWorksSection: React.FC = () => {
   const features = [
     {
       icon: <Search className="h-6 w-6 text-indigo-600" />,
-      title: "Search Any Stock or Topic",
+      title: 'Search Any Stock or Topic',
       description:
-        "Simply type in a ticker symbol, company name, or investment topic to get started.",
+        'Simply type in a ticker symbol, company name, or investment topic to get started.',
     },
     {
       icon: <BarChart className="h-6 w-6 text-indigo-600" />,
-      title: "Get AI-Powered Insights",
+      title: 'Get AI-Powered Insights',
       description:
-        "Our AI analyzes thousands of sources to deliver relevant, contextualized information.",
+        'Our AI analyzes thousands of sources to deliver relevant, contextualized information.',
     },
     {
       icon: <AlertCircle className="h-6 w-6 text-indigo-600" />,
-      title: "Understand Key Risks",
+      title: 'Understand Key Risks',
       description:
-        "Identify potential risks and market concerns that could impact your investment decisions.",
+        'Identify potential risks and market concerns that could impact your investment decisions.',
     },
     {
       icon: <MessageSquare className="h-6 w-6 text-indigo-600" />,
-      title: "Ask Follow-Up Questions",
+      title: 'Ask Follow-Up Questions',
       description:
-        "Engage in a natural conversation to dive deeper into specific aspects of your research.",
+        'Engage in a natural conversation to dive deeper into specific aspects of your research.',
     },
     {
       icon: <Upload className="h-6 w-6 text-indigo-600" />,
-      title: "Upload Financial Documents",
+      title: 'Upload Financial Documents',
       description:
-        "Get instant summaries and analysis from earnings reports, 10-Ks, and other financial documents.",
+        'Get instant summaries and analysis from earnings reports, 10-Ks, and other financial documents.',
     },
   ];
 

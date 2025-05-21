@@ -13,6 +13,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Header from "../components/Header";
+import { useAuth } from "../contexts/AuthContext";
 
 interface SearchHistoryItem {
   id: string;
@@ -56,6 +57,7 @@ const recentSearches: SearchHistoryItem[] = [
 const Dashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     document.title = "Dashboard - SmartInvest Scout";
@@ -65,6 +67,14 @@ const Dashboard: React.FC = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search/${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleUploadClick = () => {
+    if (!user) {
+      console.log("User not authenticated");
+    } else {
+      navigate("/upload");
     }
   };
 
@@ -127,6 +137,7 @@ const Dashboard: React.FC = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-left group"
+                onClick={handleUploadClick}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
