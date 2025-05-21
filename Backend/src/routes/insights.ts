@@ -15,9 +15,9 @@ router.get('/:stock_name', async (req, res) => {
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
 
-      const stream = await perplexityService.getStockInsightsStream(stock_name);
+      const dataStream = await perplexityService.getStockInsightsStream(stock_name);
 
-      for await (const chunk of stream) {
+      for await (const chunk of dataStream) {
         const content = chunk.choices[0]?.delta?.content || '';
         if (content) {
           res.write(`data: ${content}\n\n`);
