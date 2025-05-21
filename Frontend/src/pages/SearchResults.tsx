@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -9,14 +9,85 @@ import {
   Newspaper,
 } from "lucide-react";
 import Button from "../components/Button";
+import axios from "axios";
+
+axios.defaults.baseURL = import.meta.env.VITE_BACKEND_BASE_URL;
+
+interface MarketSummary {
+  whats_happening: string;
+  key_drivers: string;
+  market_reaction: string;
+}
+
+interface RiskFactors {
+  regulatory: string;
+  competition: string;
+  product_delays: string;
+}
+
+interface NewsItem {
+  headline: string;
+  summary: string;
+  source: string;
+  url: string;
+}
+
+interface InsightsData {
+  company: string;
+  last_updated: string;
+  market_summary: MarketSummary;
+  risk_factors: RiskFactors;
+  latest_news: NewsItem[];
+  follow_up_questions: string[];
+}
 
 const SearchResults: React.FC = () => {
   const navigate = useNavigate();
   const { query } = useParams();
+  const [insights, setInsights] = useState<InsightsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = `${query} - SmartInvest Scout`;
+    fetchInsights();
   }, [query]);
+
+  const fetchInsights = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get(`/api/insights/${query}`);
+      setInsights(response.data as InsightsData);
+    } catch (err) {
+      setError("Failed to fetch insights. Please try again later.");
+      console.error("Error fetching insights:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading insights...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button label="Try Again" primary onClick={fetchInsights} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -48,17 +119,18 @@ const SearchResults: React.FC = () => {
           className="bg-white rounded-xl shadow-sm p-6 mb-6"
         >
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Showing insights for: {query}
+            Showing insights for: {insights?.company}
           </h1>
           <p className="text-gray-600">
-            Last updated: {new Date().toLocaleString()}
+            Last updated:{" "}
+            {new Date(insights?.last_updated || "").toLocaleString()}
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Sonar Summary Card */}
+            {/* Market Summary Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -78,19 +150,28 @@ const SearchResults: React.FC = () => {
                   <h3 className="font-medium text-gray-900 mb-2">
                     What's Happening
                   </h3>
-                  <p className="text-gray-600">Loading market insights...</p>
+                  <p className="text-gray-600">
+                    {insights?.market_summary?.whats_happening ||
+                      "No data available"}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">
                     Key Drivers
                   </h3>
-                  <p className="text-gray-600">Loading key drivers...</p>
+                  <p className="text-gray-600">
+                    {insights?.market_summary?.key_drivers ||
+                      "No data available"}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">
                     Market Reaction
                   </h3>
-                  <p className="text-gray-600">Loading market reaction...</p>
+                  <p className="text-gray-600">
+                    {insights?.market_summary?.market_reaction ||
+                      "No data available"}
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -111,19 +192,34 @@ const SearchResults: React.FC = () => {
                 </h2>
               </div>
               <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="border-b border-gray-100 last:border-0 pb-4 last:pb-0"
-                  >
-                    <h3 className="font-medium text-gray-900 mb-1">
-                      Loading news headline...
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Loading news summary...
-                    </p>
-                  </div>
-                ))}
+                {insights?.latest_news?.length ? (
+                  insights.latest_news.map((news, i) => (
+                    <div
+                      key={i}
+                      className="border-b border-gray-100 last:border-0 pb-4 last:pb-0"
+                    >
+                      <h3 className="font-medium text-gray-900 mb-1">
+                        {news.headline}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {news.summary}
+                      </p>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <span>{news.source}</span>
+                        <a
+                          href={news.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-2 text-indigo-600 hover:text-indigo-800"
+                        >
+                          Read more →
+                        </a>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-600">No news available</p>
+                )}
               </div>
             </motion.div>
           </div>
@@ -146,18 +242,23 @@ const SearchResults: React.FC = () => {
                 </h2>
               </div>
               <div className="space-y-3">
-                {["Regulatory", "Competition", "Product Delays"].map(
-                  (risk, i) => (
-                    <div key={i} className="flex items-start space-x-3">
+                {insights?.risk_factors ? (
+                  Object.entries(insights.risk_factors).map(([key, value]) => (
+                    <div key={key} className="flex items-start space-x-3">
                       <div className="w-2 h-2 rounded-full bg-amber-500 mt-2" />
                       <div>
-                        <h3 className="font-medium text-gray-900">{risk}</h3>
+                        <h3 className="font-medium text-gray-900">
+                          {key.charAt(0).toUpperCase() +
+                            key.slice(1).replace(/_/g, " ")}
+                        </h3>
                         <p className="text-sm text-gray-600">
-                          Loading risk details...
+                          {value || "No details available"}
                         </p>
                       </div>
                     </div>
-                  )
+                  ))
+                ) : (
+                  <p className="text-gray-600">No risk factors available</p>
                 )}
               </div>
             </motion.div>
@@ -178,18 +279,20 @@ const SearchResults: React.FC = () => {
                 </h2>
               </div>
               <div className="space-y-3">
-                {[
-                  "What should I know as a long-term investor?",
-                  "What are the growth prospects?",
-                  "How does this compare to competitors?",
-                ].map((question, i) => (
-                  <button
-                    key={i}
-                    className="w-full text-left p-3 rounded-lg bg-gray-50 hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition-colors duration-200"
-                  >
-                    {question}
-                  </button>
-                ))}
+                {insights?.follow_up_questions?.length ? (
+                  insights.follow_up_questions.map((question, i) => (
+                    <button
+                      key={i}
+                      className="w-full text-left p-3 rounded-lg bg-gray-50 hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition-colors duration-200"
+                    >
+                      {question}
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-gray-600">
+                    No follow-up questions available
+                  </p>
+                )}
               </div>
             </motion.div>
           </div>
