@@ -32,7 +32,9 @@ const UserMenu: React.FC = () => {
         className="flex items-center space-x-3 focus:outline-none"
       >
         <img
-          src={user?.user_metadata?.avatar_url || 'https://via.placeholder.com/32'}
+          src={
+            user?.user_metadata?.avatar_url || 'https://via.placeholder.com/32'
+          }
           alt="Profile"
           className="w-8 h-8 rounded-full"
         />
@@ -76,4 +78,4 @@ const UserMenu: React.FC = () => {
   );
 };
 
-export default UserMenu
+export default UserMenu;

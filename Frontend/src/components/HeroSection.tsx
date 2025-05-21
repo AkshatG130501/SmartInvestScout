@@ -1,8 +1,8 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { TrendingUp, PieChart, LineChart, BarChart } from "lucide-react";
-import Button from "./Button";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { TrendingUp, PieChart, LineChart, BarChart } from 'lucide-react';
+import Button from './Button';
 
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const HeroSection: React.FC = () => {
             className="text-center md:text-left"
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-4">
-              Investment Research,{" "}
+              Investment Research,{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
                 Reimagined
               </span>
@@ -32,15 +32,15 @@ const HeroSection: React.FC = () => {
               <Button
                 label="Start Exploring"
                 primary
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate('/dashboard')}
                 icon="arrow-right"
               />
               <Button
                 label="Learn More"
                 secondary
                 onClick={() => {
-                  const howItWorks = document.getElementById("how-it-works");
-                  howItWorks?.scrollIntoView({ behavior: "smooth" });
+                  const howItWorks = document.getElementById('how-it-works');
+                  howItWorks?.scrollIntoView({ behavior: 'smooth' });
                 }}
               />
             </div>

@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   TrendingUp,
   Newspaper,
-  ExternalLink,
 } from "lucide-react";
 import Button from "../components/Button";
 

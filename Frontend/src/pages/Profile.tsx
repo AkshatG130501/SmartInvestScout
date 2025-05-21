@@ -21,7 +21,10 @@ const Profile: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center space-x-4 mb-6">
             <img
-              src={user?.user_metadata?.avatar_url || 'https://via.placeholder.com/96'}
+              src={
+                user?.user_metadata?.avatar_url ||
+                'https://via.placeholder.com/96'
+              }
               alt="Profile"
               className="w-24 h-24 rounded-full"
             />
@@ -34,22 +37,34 @@ const Profile: React.FC = () => {
           </div>
 
           <div className="border-t border-gray-200 pt-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Account Information
+            </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
                 <p className="mt-1 text-gray-900">{user?.email}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Account Created</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Account Created
+                </label>
                 <p className="mt-1 text-gray-900">
-                  {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                  {user?.created_at
+                    ? new Date(user.created_at).toLocaleDateString()
+                    : 'N/A'}
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Last Sign In</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Last Sign In
+                </label>
                 <p className="mt-1 text-gray-900">
-                  {user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : 'N/A'}
+                  {user?.last_sign_in_at
+                    ? new Date(user.last_sign_in_at).toLocaleDateString()
+                    : 'N/A'}
                 </p>
               </div>
             </div>
@@ -60,4 +75,4 @@ const Profile: React.FC = () => {
   );
 };
 
-export default Profile
+export default Profile;
