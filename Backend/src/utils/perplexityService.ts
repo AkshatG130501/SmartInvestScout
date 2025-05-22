@@ -27,6 +27,12 @@ interface NewsItem {
 }
 
 export interface DocumentSummary {
+  documentType: string;
+  overview: string;
+  sections: Record<string, unknown>;
+}
+
+export interface FixedDocumentSummary {
   overview: string;
   keyThemes: string[];
   financialHighlights: Record<string, string>;
@@ -159,17 +165,37 @@ Make sure the data is based on the most recent developments as of today. Avoid o
         logger.warn('Using mock data for document summary due to missing API key');
         return this.getMockDocumentSummary(documentText);
       }
-      
+
+      // First, identify the document type
+      const documentType = await this.identifyDocumentType(documentText);
+
+      // Then, get a dynamic summary based on the document type
+      const dynamicSummary = await this.getDynamicSummaryByType(documentText, documentType);
+
+      return {
+        documentType,
+        overview: dynamicSummary.overview,
+        sections: dynamicSummary.sections,
+      };
+    } catch (error) {
+      logger.error('Error analyzing document:', error);
+      // Return mock data if there's an error
+      return this.getMockDocumentSummary(documentText);
+    }
+  }
+
+  private async identifyDocumentType(documentText: string): Promise<string> {
+    try {
       const messages = [
         {
           role: 'system' as const,
           content:
-            'You are a financial document analysis AI assistant that provides detailed, accurate summaries of financial documents. Always respond with valid JSON only, without any markdown formatting or additional text.'
+            'You are a document classification AI that identifies document types. Always respond with valid JSON only, without any markdown formatting or additional text.',
         },
         {
           role: 'user' as const,
-          content: `Analyze the following financial document and provide a comprehensive summary in the following JSON format:\n\n{\n  "overview": "Brief overview of the document content",\n  "keyThemes": ["Key theme 1", "Key theme 2", "Key theme 3", "Key theme 4"],\n  "financialHighlights": {\n    "revenue": "Revenue details with growth percentage",\n    "ebitda": "EBITDA details with growth percentage",\n    "netProfit": "Net profit details with growth percentage",\n    "cashFlow": "Cash flow details with growth percentage"\n  },\n  "risks": ["Risk factor 1", "Risk factor 2", "Risk factor 3", "Risk factor 4"],\n  "tone": "Analysis of the document's overall tone",\n  "forwardLooking": "Summary of forward-looking statements and future plans"\n}\n\nHere is the document text:\n${documentText.substring(0, 15000)}`
-        }
+          content: `Analyze the following document and identify what type of document it is. Respond with a JSON object containing a single field 'documentType' with a specific classification (e.g., 'Annual Report', 'Financial Statement', 'Earnings Release', 'Investor Presentation', 'Research Report', 'Legal Contract', etc.). Be specific about the document type.\n\nHere is the document text:\n${documentText.substring(0, 5000)}`,
+        },
       ];
 
       const response = await this.client.chat.completions.create({
@@ -183,45 +209,92 @@ Make sure the data is based on the most recent developments as of today. Avoid o
       }
 
       const cleanedContent = this.cleanJsonResponse(content);
-      const parsedContent = JSON.parse(cleanedContent) as DocumentSummary;
-      return parsedContent;
+      const parsedContent = JSON.parse(cleanedContent);
+      return parsedContent.documentType || 'Unknown Document';
     } catch (error) {
-      logger.error('Error analyzing document:', error);
-      // Return mock data if there's an error
-      return this.getMockDocumentSummary(documentText);
+      logger.error('Error identifying document type:', error);
+      return 'Unknown Document';
     }
   }
-  
+
+  private async getDynamicSummaryByType(
+    documentText: string,
+    documentType: string
+  ): Promise<{ overview: string; sections: Record<string, unknown> }> {
+    try {
+      const messages = [
+        {
+          role: 'system' as const,
+          content:
+            'You are a document analysis AI that provides detailed, accurate summaries of documents. Always respond with valid JSON only, without any markdown formatting or additional text.',
+        },
+        {
+          role: 'user' as const,
+          content: `Analyze the following ${documentType} and provide a comprehensive summary. Break down the summary into logical sections based on the document type. The response should be in JSON format with the following structure:\n\n{\n  "overview": "Brief overview of the document content",\n  "sections": {\n    "section1Name": "Content for section 1 or [array of items]",\n    "section2Name": "Content for section 2 or [array of items]",\n    "section3Name": { "subsection1": "value", "subsection2": "value" },\n    ...more sections as needed based on document type\n  }\n}\n\nCreate appropriate section names and structure based on the document type. For example:\n- For financial reports: include sections like "financialHighlights", "keyRatios", "segmentPerformance"\n- For legal documents: include sections like "parties", "terms", "obligations", "termination"\n- For research reports: include sections like "methodology", "findings", "recommendations"\n\nAdapt the structure to best represent the content of this specific ${documentType}.\n\nHere is the document text:\n${documentText.substring(0, 15000)}`,
+        },
+      ];
+
+      const response = await this.client.chat.completions.create({
+        model: 'sonar-pro',
+        messages,
+      });
+
+      const content = response.choices[0].message.content;
+      if (!content) {
+        throw new Error('No content received from Perplexity API');
+      }
+
+      const cleanedContent = this.cleanJsonResponse(content);
+      const parsedContent = JSON.parse(cleanedContent);
+      return {
+        overview: parsedContent.overview || 'No overview available',
+        sections: parsedContent.sections || {},
+      };
+    } catch (error) {
+      logger.error('Error getting dynamic summary:', error);
+      return {
+        overview: 'Error generating document summary',
+        sections: {},
+      };
+    }
+  }
+
   private getMockDocumentSummary(documentText: string): DocumentSummary {
     // Extract a small sample of the document for the overview
     const sampleText = documentText.substring(0, 100).trim() + '...';
-    
+
     return {
+      documentType: 'Annual Report',
       overview: `Document analysis based on sample: ${sampleText}`,
-      keyThemes: [
-        "Financial performance metrics",
-        "Market expansion strategy",
-        "Risk management approach",
-        "Technology investments"
-      ],
-      financialHighlights: {
-        revenue: "₹1,250 Cr (+25% YoY)",
-        ebitda: "₹280 Cr (+18% YoY)",
-        netProfit: "₹175 Cr (+15% YoY)",
-        cashFlow: "₹210 Cr (+20% YoY)"
+      sections: {
+        keyThemes: [
+          'Financial performance metrics',
+          'Market expansion strategy',
+          'Risk management approach',
+          'Technology investments',
+        ],
+        financialHighlights: {
+          revenue: '₹1,250 Cr (+25% YoY)',
+          ebitda: '₹280 Cr (+18% YoY)',
+          netProfit: '₹175 Cr (+15% YoY)',
+          cashFlow: '₹210 Cr (+20% YoY)',
+        },
+        risks: [
+          'Regulatory changes in fintech sector',
+          'Cybersecurity threats',
+          'Market competition',
+          'Currency fluctuations',
+        ],
+        tone: 'The document presents information in a professional and balanced manner, highlighting both opportunities and challenges.',
+        forwardLooking:
+          'The document indicates plans for expansion into new markets, investment in digital technologies, and development of new product offerings.',
       },
-      risks: [
-        "Regulatory changes in fintech sector",
-        "Cybersecurity threats",
-        "Market competition",
-        "Currency fluctuations"
-      ],
-      tone: "The document presents information in a professional and balanced manner, highlighting both opportunities and challenges.",
-      forwardLooking: "The document indicates plans for expansion into new markets, investment in digital technologies, and development of new product offerings."
     };
   }
 
-  async getStockInsightsStream(stockSymbol: string) {
+  async getStockInsightsStream(
+    stockSymbol: string
+  ): Promise<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>> {
     try {
       const messages = [
         {
