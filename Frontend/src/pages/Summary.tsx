@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText } from "lucide-react";
 import {
@@ -10,43 +10,47 @@ import {
 import Button from "../components/Button";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { DocumentSummary } from "../lib/api";
 
-// Mock data - replace with actual API response
-const mockSummary = {
-  overview:
-    "The document is the FY2023 Annual Report for ABC Corp, highlighting strong revenue growth of 25% YoY and expansion into new markets.",
-  keyThemes: [
-    "Digital transformation initiatives",
-    "Market expansion in APAC region",
-    "Sustainable business practices",
-    "Innovation in fintech solutions",
-  ],
+// Default summary structure in case no data is available
+const defaultSummary: DocumentSummary = {
+  overview: "No document summary available. Please upload a document first.",
+  keyThemes: ["No themes available"],
   financialHighlights: {
-    revenue: "₹1,250 Cr (+25% YoY)",
-    ebitda: "₹280 Cr (+18% YoY)",
-    netProfit: "₹175 Cr (+15% YoY)",
-    cashFlow: "₹210 Cr (+20% YoY)",
+    revenue: "Not available",
+    ebitda: "Not available",
+    netProfit: "Not available",
+    cashFlow: "Not available",
   },
-  risks: [
-    "Regulatory changes in fintech sector",
-    "Cybersecurity threats",
-    "Market competition",
-    "Currency fluctuations",
-  ],
-  tone: "The overall tone is optimistic and confident, with a balanced discussion of opportunities and challenges.",
-  forwardLooking:
-    "The company plans to invest heavily in AI/ML capabilities, expand its product portfolio, and enter 3 new markets in the next fiscal year.",
+  risks: ["No risks identified"],
+  tone: "No tone analysis available",
+  forwardLooking: "No forward-looking statements identified",
 };
 
 const Summary: React.FC = () => {
   const navigate = useNavigate();
   const [question, setQuestion] = useState("");
   const [asking, setAsking] = useState(false);
+  const [summary, setSummary] = useState<DocumentSummary>(defaultSummary);
+  const [loading, setLoading] = useState(true);
   const summaryRef = React.useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    // Retrieve the document summary from session storage
+    const storedSummary = sessionStorage.getItem('documentSummary');
+    if (storedSummary) {
+      try {
+        setSummary(JSON.parse(storedSummary));
+      } catch (error) {
+        console.error('Error parsing document summary:', error);
+      }
+    }
+    setLoading(false);
+  }, []);
 
   const handleCopyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(JSON.stringify(mockSummary, null, 2));
+      await navigator.clipboard.writeText(JSON.stringify(summary, null, 2));
       // You could add a toast notification here
     } catch (err) {
       console.error("Failed to copy to clipboard:", err);
@@ -118,62 +122,68 @@ const Summary: React.FC = () => {
             </h1>
           </div>
 
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="overview">
-              <AccordionTrigger>Overview</AccordionTrigger>
-              <AccordionContent>{mockSummary.overview}</AccordionContent>
-            </AccordionItem>
+          {loading ? (
+            <div className="py-8 text-center">
+              <p className="text-gray-500">Loading document summary...</p>
+            </div>
+          ) : (
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="overview">
+                <AccordionTrigger>Overview</AccordionTrigger>
+                <AccordionContent>{summary.overview}</AccordionContent>
+              </AccordionItem>
 
-            <AccordionItem value="key-themes">
-              <AccordionTrigger>Key Themes</AccordionTrigger>
-              <AccordionContent>
-                <ul className="list-disc pl-4 space-y-2">
-                  {mockSummary.keyThemes.map((theme, index) => (
-                    <li key={index}>{theme}</li>
-                  ))}
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
+              <AccordionItem value="key-themes">
+                <AccordionTrigger>Key Themes</AccordionTrigger>
+                <AccordionContent>
+                  <ul className="list-disc pl-4 space-y-2">
+                    {summary.keyThemes.map((theme, index) => (
+                      <li key={index}>{theme}</li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
 
-            <AccordionItem value="financial-highlights">
-              <AccordionTrigger>Financial Highlights</AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(mockSummary.financialHighlights).map(
-                    ([key, value]) => (
-                      <div key={key} className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500 capitalize">
-                          {key.replace(/([A-Z])/g, " $1").trim()}
-                        </p>
-                        <p className="font-medium text-gray-900">{value}</p>
-                      </div>
-                    )
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+              <AccordionItem value="financial-highlights">
+                <AccordionTrigger>Financial Highlights</AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(summary.financialHighlights).map(
+                      ([key, value]) => (
+                        <div key={key} className="bg-gray-50 p-3 rounded-lg">
+                          <p className="text-sm text-gray-500 capitalize">
+                            {key.replace(/([A-Z])/g, " $1").trim()}
+                          </p>
+                          <p className="font-medium text-gray-900">{value}</p>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
-            <AccordionItem value="risks">
-              <AccordionTrigger>Risks</AccordionTrigger>
-              <AccordionContent>
-                <ul className="list-disc pl-4 space-y-2">
-                  {mockSummary.risks.map((risk, index) => (
-                    <li key={index}>{risk}</li>
-                  ))}
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
+              <AccordionItem value="risks">
+                <AccordionTrigger>Risks</AccordionTrigger>
+                <AccordionContent>
+                  <ul className="list-disc pl-4 space-y-2">
+                    {summary.risks.map((risk, index) => (
+                      <li key={index}>{risk}</li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
 
-            <AccordionItem value="tone">
-              <AccordionTrigger>Document Tone</AccordionTrigger>
-              <AccordionContent>{mockSummary.tone}</AccordionContent>
-            </AccordionItem>
+              <AccordionItem value="tone">
+                <AccordionTrigger>Document Tone</AccordionTrigger>
+                <AccordionContent>{summary.tone}</AccordionContent>
+              </AccordionItem>
 
-            <AccordionItem value="forward-looking">
-              <AccordionTrigger>Forward-looking Commentary</AccordionTrigger>
-              <AccordionContent>{mockSummary.forwardLooking}</AccordionContent>
-            </AccordionItem>
-          </Accordion>
+              <AccordionItem value="forward-looking">
+                <AccordionTrigger>Forward-looking Commentary</AccordionTrigger>
+                <AccordionContent>{summary.forwardLooking}</AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
 
           <div className="mt-8 border-t pt-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
