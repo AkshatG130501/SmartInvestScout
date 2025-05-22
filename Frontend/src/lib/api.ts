@@ -10,12 +10,9 @@ const api = axios.create({
 });
 
 export interface DocumentSummary {
+  documentType: string;
   overview: string;
-  keyThemes: string[];
-  financialHighlights: Record<string, string>;
-  risks: string[];
-  tone: string;
-  forwardLooking: string;
+  sections: Record<string, unknown>;
 }
 
 export const uploadAndAnalyzeDocument = async (

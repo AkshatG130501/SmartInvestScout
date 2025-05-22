@@ -14,17 +14,9 @@ import { DocumentSummary } from "../lib/api";
 
 // Default summary structure in case no data is available
 const defaultSummary: DocumentSummary = {
+  documentType: "Unknown Document",
   overview: "No document summary available. Please upload a document first.",
-  keyThemes: ["No themes available"],
-  financialHighlights: {
-    revenue: "Not available",
-    ebitda: "Not available",
-    netProfit: "Not available",
-    cashFlow: "Not available",
-  },
-  risks: ["No risks identified"],
-  tone: "No tone analysis available",
-  forwardLooking: "No forward-looking statements identified",
+  sections: {},
 };
 
 const Summary: React.FC = () => {
@@ -34,15 +26,135 @@ const Summary: React.FC = () => {
   const [summary, setSummary] = useState<DocumentSummary>(defaultSummary);
   const [loading, setLoading] = useState(true);
   const summaryRef = React.useRef<HTMLDivElement>(null);
-  
+
+  // Helper function to render different types of section content
+  const renderSectionContent = (content: unknown) => {
+    // If content is an array of objects (like keyMetrics)
+    if (
+      Array.isArray(content) &&
+      content.length > 0 &&
+      typeof content[0] === "object"
+    ) {
+      // Check if array items have common properties that suggest a table structure
+      const firstItem = content[0] as Record<string, unknown>;
+      const keys = Object.keys(firstItem);
+
+      if (keys.length > 0) {
+        return (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  {keys.map((key) => (
+                    <th
+                      key={key}
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {key
+                        .replace(/([A-Z])/g, " $1")
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase() +
+                        key
+                          .replace(/([A-Z])/g, " $1")
+                          .trim()
+                          .slice(1)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {content.map((item, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {keys.map((key) => (
+                      <td
+                        key={`${rowIndex}-${key}`}
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                      >
+                        {String((item as Record<string, unknown>)[key] || "")}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+    }
+
+    // If content is a simple array of strings or numbers, render as a list
+    else if (Array.isArray(content)) {
+      return (
+        <ul className="list-disc pl-4 space-y-2">
+          {content.map((item, index) => (
+            <li key={index}>{String(item)}</li>
+          ))}
+        </ul>
+      );
+    }
+
+    // If content is an object with nested objects (like everspan, cirrata)
+    else if (typeof content === "object" && content !== null) {
+      console.log("Rendering object content:", content);
+      return (
+        <div className="space-y-6">
+          {Object.entries(content as Record<string, unknown>).map(
+            ([key, value]) => {
+              // If the value is a nested object
+              if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+                return (
+                  <div key={key} className="border rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-3 capitalize">
+                      {key.replace(/([A-Z])/g, " $1").trim()}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(value as Record<string, unknown>).map(
+                        ([nestedKey, nestedValue]) => (
+                          <div key={nestedKey} className="bg-gray-50 p-3 rounded-lg">
+                            <p className="text-sm text-gray-500 capitalize">
+                              {nestedKey.replace(/([A-Z])/g, " $1").trim()}
+                            </p>
+                            <p className="font-medium text-gray-900">{String(nestedValue)}</p>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+              // For regular key-value pairs
+              return (
+                <div key={key} className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-500 capitalize">
+                    {key.replace(/([A-Z])/g, " $1").trim()}
+                  </p>
+                  <p className="font-medium text-gray-900">{String(value)}</p>
+                </div>
+              );
+            }
+          )}
+        </div>
+      );
+    }
+
+    // If content is a string, render as a paragraph
+    else if (typeof content === "string") {
+      return <p>{content}</p>;
+    } else {
+      return null;
+    }
+  };
+
   useEffect(() => {
     // Retrieve the document summary from session storage
-    const storedSummary = sessionStorage.getItem('documentSummary');
+    const storedSummary = sessionStorage.getItem("documentSummary");
     if (storedSummary) {
       try {
         setSummary(JSON.parse(storedSummary));
       } catch (error) {
-        console.error('Error parsing document summary:', error);
+        console.error("Error parsing document summary:", error);
       }
     }
     setLoading(false);
@@ -127,62 +239,42 @@ const Summary: React.FC = () => {
               <p className="text-gray-500">Loading document summary...</p>
             </div>
           ) : (
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="overview">
-                <AccordionTrigger>Overview</AccordionTrigger>
-                <AccordionContent>{summary.overview}</AccordionContent>
-              </AccordionItem>
+            <div>
+              <div className="mb-6 bg-indigo-50 p-4 rounded-lg">
+                <h2 className="text-lg font-semibold text-indigo-800">
+                  Document Type: {summary.documentType}
+                </h2>
+              </div>
 
-              <AccordionItem value="key-themes">
-                <AccordionTrigger>Key Themes</AccordionTrigger>
-                <AccordionContent>
-                  <ul className="list-disc pl-4 space-y-2">
-                    {summary.keyThemes.map((theme, index) => (
-                      <li key={index}>{theme}</li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="overview">
+                  <AccordionTrigger>Overview</AccordionTrigger>
+                  <AccordionContent>{summary.overview}</AccordionContent>
+                </AccordionItem>
 
-              <AccordionItem value="financial-highlights">
-                <AccordionTrigger>Financial Highlights</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(summary.financialHighlights).map(
-                      ([key, value]) => (
-                        <div key={key} className="bg-gray-50 p-3 rounded-lg">
-                          <p className="text-sm text-gray-500 capitalize">
-                            {key.replace(/([A-Z])/g, " $1").trim()}
-                          </p>
-                          <p className="font-medium text-gray-900">{value}</p>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+                {/* Dynamically render sections based on the document type */}
+                {Object.entries(summary.sections).map(
+                  ([sectionKey, sectionContent]) => {
+                    // Format the section key for display
+                    const formattedSectionKey = sectionKey
+                      .replace(/([A-Z])/g, " $1")
+                      .replace(/^./, (str) => str.toUpperCase())
+                      .trim();
 
-              <AccordionItem value="risks">
-                <AccordionTrigger>Risks</AccordionTrigger>
-                <AccordionContent>
-                  <ul className="list-disc pl-4 space-y-2">
-                    {summary.risks.map((risk, index) => (
-                      <li key={index}>{risk}</li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="tone">
-                <AccordionTrigger>Document Tone</AccordionTrigger>
-                <AccordionContent>{summary.tone}</AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="forward-looking">
-                <AccordionTrigger>Forward-looking Commentary</AccordionTrigger>
-                <AccordionContent>{summary.forwardLooking}</AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                    return (
+                      <AccordionItem key={sectionKey} value={sectionKey}>
+                        <AccordionTrigger>
+                          {formattedSectionKey}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          {renderSectionContent(sectionContent)}
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  }
+                )}
+              </Accordion>
+            </div>
           )}
 
           <div className="mt-8 border-t pt-6">
