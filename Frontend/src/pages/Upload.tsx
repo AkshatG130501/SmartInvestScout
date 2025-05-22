@@ -5,6 +5,7 @@ import { ArrowLeft, Upload as UploadIcon, X, FileText } from "lucide-react";
 import { Progress } from "../components/ui/progress";
 import { formatFileSize } from "../lib/utils";
 import Button from "../components/Button";
+import { uploadAndAnalyzeDocument } from "../lib/api";
 
 const ACCEPTED_FILE_TYPES = {
   "application/pdf": [".pdf"],
@@ -47,7 +48,7 @@ const Upload: React.FC = () => {
 
     try {
       setUploading(true);
-      // Simulate upload progress
+      // Start upload progress
       const interval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 95) {
@@ -58,15 +59,20 @@ const Upload: React.FC = () => {
         });
       }, 100);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Call API to upload and analyze document
+      const summary = await uploadAndAnalyzeDocument(file);
+      
+      // Store the summary in session storage to pass to the Summary page
+      sessionStorage.setItem('documentSummary', JSON.stringify(summary));
+      
       clearInterval(interval);
       setUploadProgress(100);
 
-      // Simulate processing delay
+      // Short delay before navigation
       await new Promise((resolve) => setTimeout(resolve, 500));
       navigate("/summary");
-    } catch {
+    } catch (error) {
+      console.error('Error uploading document:', error);
       setError("Failed to upload file. Please try again.");
       setUploading(false);
       setUploadProgress(0);
