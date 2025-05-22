@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 
 export class AppError extends Error {
-  constructor(public statusCode: number, message: string) {
+  constructor(
+    public statusCode: number,
+    message: string
+  ) {
     super(message);
     this.name = 'AppError';
   }
@@ -12,8 +15,8 @@ export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
-) => {
+  _next: NextFunction
+): Response => {
   logger.error(err);
 
   if (err instanceof AppError) {
@@ -27,4 +30,4 @@ export const errorHandler = (
     status: 'error',
     message: 'Internal server error',
   });
-}; 
+};

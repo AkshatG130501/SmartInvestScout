@@ -31,7 +31,7 @@ export const uploadAndAnalyzeDocument = async (
         "Content-Type": "multipart/form-data",
       },
     });
-    return response.data;
+    return response.data as DocumentSummary;
   } catch (error) {
     console.error("Error analyzing document:", error);
     throw error;
