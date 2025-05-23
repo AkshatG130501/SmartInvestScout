@@ -194,7 +194,7 @@ Make sure the data is based on the most recent developments as of today. Avoid o
         },
         {
           role: 'user' as const,
-          content: `Analyze the following document and identify what type of document it is. Respond with a JSON object containing a single field 'documentType' with a specific classification (e.g., 'Annual Report', 'Financial Statement', 'Earnings Release', 'Investor Presentation', 'Research Report', 'Legal Contract', etc.). Be specific about the document type.\n\nHere is the document text:\n${documentText.substring(0, 5000)}`,
+          content: `Analyze the following document and identify what type of document it is. Respond with a JSON object containing a single field 'documentType' with a specific classification (e.g., 'Annual Report', 'Financial Statement', 'Earnings Release', 'Investor Presentation', 'Research Report', 'Legal Contract', etc.). Be specific about the document type.\n\nHere is the document text:\n${documentText.substring(0, 15000)}`,
         },
       ];
 
@@ -222,6 +222,37 @@ Make sure the data is based on the most recent developments as of today. Avoid o
     documentType: string
   ): Promise<{ overview: string; sections: Record<string, unknown> }> {
     try {
+      const promt = `Analyze the following ${documentType} and provide a detailed financial analyst-style summary. This document is likely a company annual report (10-K).
+
+      Summarize the content in structured JSON format with the following schema:
+      
+      {
+        "overview": "Brief overview of the company's business and performance",
+        "sections": {
+          "companyOverview": "What the company does, business model, primary customers and industries",
+          "financialHighlights": {
+            "revenue": "Total revenue or revenue range if mentioned",
+            "netIncome": "Net income or loss if available",
+            "cash": "Cash or cash equivalents on hand",
+            "sharesOutstanding": "Shares outstanding",
+            "stockPriceRange": "Price range if mentioned"
+          },
+          "growthStrategy": "Describe how the company plans to grow (e.g., M&A, product expansion, new markets)",
+          "productsAndServices": "Key products, services, and technologies offered",
+          "riskFactors": [
+            "Summarized bullet list of major risks (regulatory, market, supply chain, etc.)"
+          ],
+          "regulatoryAndCompliance": "Any delisting warnings, internal control weaknesses, or legal issues",
+          "recentEvents": "Recent major announcements, acquisitions, divestitures, or executive changes",
+          "governmentIncentives": "Tax credits, subsidies, or policy dependencies mentioned"
+        }
+      }
+      
+      Only return valid JSON with this structure. Don’t add extra text or markdown formatting. Here is the document content:
+      
+      ${documentText.substring(0, 15000)}
+      `;
+
       const messages = [
         {
           role: 'system' as const,
@@ -230,7 +261,7 @@ Make sure the data is based on the most recent developments as of today. Avoid o
         },
         {
           role: 'user' as const,
-          content: `Analyze the following ${documentType} and provide a comprehensive summary. Break down the summary into logical sections based on the document type. The response should be in JSON format with the following structure:\n\n{\n  "overview": "Brief overview of the document content",\n  "sections": {\n    "section1Name": "Content for section 1 or [array of items]",\n    "section2Name": "Content for section 2 or [array of items]",\n    "section3Name": { "subsection1": "value", "subsection2": "value" },\n    ...more sections as needed based on document type\n  }\n}\n\nCreate appropriate section names and structure based on the document type. For example:\n- For financial reports: include sections like "financialHighlights", "keyRatios", "segmentPerformance"\n- For legal documents: include sections like "parties", "terms", "obligations", "termination"\n- For research reports: include sections like "methodology", "findings", "recommendations"\n\nAdapt the structure to best represent the content of this specific ${documentType}.\n\nHere is the document text:\n${documentText.substring(0, 15000)}`,
+          content: `${promt}`,
         },
       ];
 
@@ -260,7 +291,6 @@ Make sure the data is based on the most recent developments as of today. Avoid o
   }
 
   private getMockDocumentSummary(documentText: string): DocumentSummary {
-    // Extract a small sample of the document for the overview
     const sampleText = documentText.substring(0, 100).trim() + '...';
 
     return {
@@ -305,36 +335,35 @@ Make sure the data is based on the most recent developments as of today. Avoid o
         {
           role: 'user' as const,
           content: `Give me the most recent and up-to-date market insights and news for the stock ${stockSymbol} as of today in the following JSON format:
+        {
+          "company": "${stockSymbol}",
+          "last_updated": "ISO8601 timestamp",
+          "market_summary": {
+            "whats_happening": "Briefly describe latest events affecting the stock",
+            "key_drivers": "Briefly describe current main factors driving stock price",
+            "market_reaction": "Briefly describe recent market response to developments"
+          },
+          "risk_factors": {
+            "regulatory": "Briefly describe latest regulatory issues",
+            "competition": "Briefly describe recent competitive threats",
+            "product_delays": "Briefly describe any current product delays or concerns"
+          },
+          "latest_news": [
+            {
+              "headline": "Concise news headline",
+              "summary": "Very brief description",
+              "source": "News outlet name",
+              "url": "Link to the article"
+            }
+          ],
+          "follow_up_questions": [
+            "Concise follow-up question 1",
+            "Concise follow-up question 2",
+            "Concise follow-up question 3"
+          ]
+        }
 
-{
-  "company": "${stockSymbol}",
-  "last_updated": "ISO8601 timestamp",
-  "market_summary": {
-    "whats_happening": "Briefly describe latest events affecting the stock",
-    "key_drivers": "Briefly describe current main factors driving stock price",
-    "market_reaction": "Briefly describe recent market response to developments"
-  },
-  "risk_factors": {
-    "regulatory": "Briefly describe latest regulatory issues",
-    "competition": "Briefly describe recent competitive threats",
-    "product_delays": "Briefly describe any current product delays or concerns"
-  },
-  "latest_news": [
-    {
-      "headline": "Concise news headline",
-      "summary": "Very brief description",
-      "source": "News outlet name",
-      "url": "Link to the article"
-    }
-  ],
-  "follow_up_questions": [
-    "Concise follow-up question 1",
-    "Concise follow-up question 2",
-    "Concise follow-up question 3"
-  ]
-}
-
-Make sure the data is based on the most recent developments as of today. Avoid outdated information. Respond with valid JSON only. Keep the content brief and suitable for a UI display.`,
+        Make sure the data is based on the most recent developments as of today. Avoid outdated information. Respond with valid JSON only. Keep the content brief and suitable for a UI display.`,
         },
       ];
 

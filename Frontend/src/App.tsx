@@ -7,7 +7,6 @@ import SearchResults from './pages/SearchResults';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import Upload from './pages/Upload';
 import Summary from './pages/Summary';
 
 function App() {
@@ -19,14 +18,6 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/search/:query" element={<SearchResults />} />
           <Route path="/chat" element={<Chat />} />
-          <Route
-            path="/upload"
-            element={
-              <ProtectedRoute>
-                <Upload />
-              </ProtectedRoute>
-            }
-          />
           <Route
             path="/summary"
             element={

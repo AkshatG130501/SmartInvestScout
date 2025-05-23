@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Header from "../components/Header";
 import { useAuth } from "../contexts/AuthContext";
+import UploadModal from "../components/UploadModal";
 
 interface SearchHistoryItem {
   id: string;
@@ -57,7 +58,7 @@ const recentSearches: SearchHistoryItem[] = [
 const Dashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   useEffect(() => {
     document.title = "Dashboard - SmartInvest Scout";
@@ -71,11 +72,13 @@ const Dashboard: React.FC = () => {
   };
 
   const handleUploadClick = () => {
-    if (!user) {
-      console.log("User not authenticated");
-    } else {
-      navigate("/upload");
-    }
+    setIsUploadModalOpen(true);
+  };
+
+  const handleUploadComplete = (summary: any) => {
+    // Store the summary in session storage to pass to the Summary page
+    sessionStorage.setItem("documentSummary", JSON.stringify(summary));
+    navigate("/summary");
   };
 
   return (
@@ -217,6 +220,12 @@ const Dashboard: React.FC = () => {
           </motion.div>
         </div>
       </div>
+
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadComplete={handleUploadComplete}
+      />
     </>
   );
 };
