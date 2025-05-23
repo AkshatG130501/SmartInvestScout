@@ -1,10 +1,10 @@
 import React, { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import * as Dialog from "@radix-ui/react-dialog";
 import { useDropzone } from "react-dropzone";
-import { ArrowLeft, Upload as UploadIcon, X, FileText } from "lucide-react";
-import { Progress } from "../components/ui/progress";
+import { X, Upload as UploadIcon, FileText } from "lucide-react";
+import { Progress } from "./ui/progress";
 import { formatFileSize } from "../lib/utils";
-import Button from "../components/Button";
+import Button from "./Button";
 import { uploadAndAnalyzeDocument } from "../lib/api";
 
 const ACCEPTED_FILE_TYPES = {
@@ -17,12 +17,21 @@ const ACCEPTED_FILE_TYPES = {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-const Upload: React.FC = () => {
+interface UploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onUploadComplete: (summary: any) => void;
+}
+
+const UploadModal: React.FC<UploadModalProps> = ({
+  isOpen,
+  onClose,
+  onUploadComplete,
+}) => {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const navigate = useNavigate();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setError(null);
@@ -61,18 +70,16 @@ const Upload: React.FC = () => {
 
       // Call API to upload and analyze document
       const summary = await uploadAndAnalyzeDocument(file);
-      
-      // Store the summary in session storage to pass to the Summary page
-      sessionStorage.setItem('documentSummary', JSON.stringify(summary));
-      
+
       clearInterval(interval);
       setUploadProgress(100);
 
-      // Short delay before navigation
+      // Short delay before closing
       await new Promise((resolve) => setTimeout(resolve, 500));
-      navigate("/summary");
+      onUploadComplete(summary);
+      onClose();
     } catch (error) {
-      console.error('Error uploading document:', error);
+      console.error("Error uploading document:", error);
       setError("Failed to upload file. Please try again.");
       setUploading(false);
       setUploadProgress(0);
@@ -80,20 +87,18 @@ const Upload: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors duration-200 mb-6"
-        >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          <span>Back to Dashboard</span>
-        </button>
-
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
-            Upload Financial Document
-          </h1>
+    <Dialog.Root open={isOpen} onOpenChange={onClose}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <Dialog.Title className="text-2xl font-bold text-gray-900">
+              Upload Financial Document
+            </Dialog.Title>
+            <Dialog.Close className="text-gray-400 hover:text-gray-500">
+              <X className="h-5 w-5" />
+            </Dialog.Close>
+          </div>
 
           <div
             {...getRootProps()}
@@ -154,7 +159,8 @@ const Upload: React.FC = () => {
             </div>
           )}
 
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6 flex justify-end space-x-4">
+            <Button label="Cancel" secondary onClick={onClose} />
             <Button
               label="Upload and Analyze"
               primary
@@ -164,10 +170,10 @@ const Upload: React.FC = () => {
               }`}
             />
           </div>
-        </div>
-      </div>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 };
 
-export default Upload;
+export default UploadModal;
