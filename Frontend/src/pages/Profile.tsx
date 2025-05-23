@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowLeft } from 'lucide-react';
+import { useProfile } from '../contexts/ProfileContext';
+import { ArrowLeft, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ProfileSetup from '../components/ProfileSetup';
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
+  const { profile, refreshProfile } = useProfile();
   const navigate = useNavigate();
+  const [editingProfile, setEditingProfile] = useState(false);
+
+  const handleProfileUpdateComplete = async () => {
+    setEditingProfile(false);
+    await refreshProfile();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -18,7 +27,7 @@ const Profile: React.FC = () => {
           <span>Back to Dashboard</span>
         </button>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <div className="flex items-center space-x-4 mb-6">
             <img
               src={
@@ -69,6 +78,109 @@ const Profile: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Investment Profile Section */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Investment Profile
+            </h2>
+            {profile && !editingProfile && (
+              <button
+                onClick={() => setEditingProfile(true)}
+                className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                <span>Edit</span>
+              </button>
+            )}
+          </div>
+
+          {editingProfile ? (
+            <ProfileSetup onComplete={handleProfileUpdateComplete} />
+          ) : profile ? (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-md font-medium text-gray-700 mb-2">Risk Appetite</h3>
+                <p className="text-gray-900 capitalize">{profile.risk_appetite}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-md font-medium text-gray-700 mb-2">Investment Goals</h3>
+                <div className="flex flex-wrap gap-2">
+                  {profile.investment_goals.map((goal, index) => (
+                    <span 
+                      key={index} 
+                      className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm"
+                    >
+                      {goal.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-md font-medium text-gray-700 mb-2">Watchlist / Interests</h3>
+                {profile.watchlist.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {profile.watchlist.map((item, index) => (
+                      <span 
+                        key={index} 
+                        className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">No items in watchlist</p>
+                )}
+              </div>
+              
+              <div>
+                <h3 className="text-md font-medium text-gray-700 mb-2">Holdings</h3>
+                {profile.holdings.length > 0 ? (
+                  <div className="border border-gray-200 rounded-md overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Symbol
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Quantity
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {profile.holdings.map((holding, index) => (
+                          <tr key={index}>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {holding.symbol}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {holding.name}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {holding.quantity || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">No holdings added</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <ProfileSetup onComplete={handleProfileUpdateComplete} />
+          )}
         </div>
       </div>
     </div>

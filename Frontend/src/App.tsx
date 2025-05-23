@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ProfileProvider } from './contexts/ProfileContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
@@ -12,8 +13,9 @@ import Summary from './pages/Summary';
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
+      <ProfileProvider>
+        <Router>
+          <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/search/:query" element={<SearchResults />} />
@@ -43,7 +45,8 @@ function App() {
             }
           />
         </Routes>
-      </Router>
+        </Router>
+      </ProfileProvider>
     </AuthProvider>
   );
 }

@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { healthCheckRouter } from './healthCheck';
 import { insightsRouter } from './insights';
 import { documentsRouter } from './documents';
+import { profilesRouter } from './profiles';
+import { chatRouter } from './chat';
 
 const router = Router();
 
@@ -13,5 +15,11 @@ router.use('/insights', insightsRouter);
 
 // Documents routes
 router.use('/documents', documentsRouter);
+
+// User profiles routes
+router.use('/profiles', profilesRouter);
+
+// Chat routes
+router.use('/chat', chatRouter);
 
 export default router;
