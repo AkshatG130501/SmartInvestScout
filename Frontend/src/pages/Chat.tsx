@@ -1,13 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Send, Bot, User, Loader2 } from "lucide-react";
+import { ArrowLeft, Search, Send, Bot, User, Loader2, Info, X } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { useProfile } from "../contexts/ProfileContext";
+import { getPersonalizedChatResponse } from "../lib/api";
 
 interface Message {
   id: string;
   type: "user" | "ai";
   content: string;
   timestamp: Date;
+  personalizationContext?: {
+    riskAppetite: string;
+    investmentGoals: string[];
+    watchlist: string[];
+    holdings: string[];
+  } | null;
 }
 
 const suggestedPrompts = [
@@ -18,9 +27,13 @@ const suggestedPrompts = [
 ];
 
 const Chat: React.FC = () => {
+  const { user } = useAuth();
+  const { profile } = useProfile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  const [showContextInfo, setShowContextInfo] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -35,6 +48,11 @@ const Chat: React.FC = () => {
   useEffect(() => {
     document.title = "Ask Anything - SmartInvest Scout";
   }, []);
+
+  // Check if user is logged in but has no profile
+  useEffect(() => {
+    setShowProfilePrompt(!!user && !profile);
+  }, [user, profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,21 +69,59 @@ const Chat: React.FC = () => {
     setInput("");
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
+    try {
+      if (user) {
+        // Get personalized response from backend
+        const response = await getPersonalizedChatResponse(user.id, input.trim());
+        
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: "ai",
+          content: response.content,
+          timestamp: new Date(),
+          personalizationContext: response.personalizationContext
+        };
+        
+        setMessages((prev) => [...prev, aiMessage]);
+      } else {
+        // Fallback for non-logged in users
+        setTimeout(() => {
+          const aiMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            type: "ai",
+            content: "For personalized investment insights tailored to your risk profile and interests, please sign in and set up your profile.",
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, aiMessage]);
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error getting chat response:", error);
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "ai",
-        content:
-          "This is a placeholder response. Integration with Sonar API will provide real-time investment insights.",
+        content: "Sorry, I encountered an error while processing your request. Please try again later.",
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
-  const MessageBubble: React.FC<{ message: Message }> = ({ message }) => (
+  const toggleContextInfo = (index: number) => {
+    if (showContextInfo === index) {
+      setShowContextInfo(null);
+    } else {
+      setShowContextInfo(index);
+    }
+  };
+
+  const formatContextItem = (item: string) => {
+    return item.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const MessageBubble: React.FC<{ message: Message; index: number }> = ({ message, index }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -86,13 +142,51 @@ const Chat: React.FC = () => {
       </div>
       <div className="flex-1">
         <div className="flex items-center justify-between mb-1">
-          <span className="font-medium text-gray-900">
-            {message.type === "ai" ? "SmartInvest Scout" : "You"}
-          </span>
+          <div className="flex items-center">
+            <span className="font-medium text-gray-900">
+              {message.type === "ai" ? "SmartInvest Scout" : "You"}
+            </span>
+            {message.type === "ai" && message.personalizationContext && (
+              <button 
+                onClick={() => toggleContextInfo(index)}
+                className="ml-2 text-xs text-indigo-600 hover:text-indigo-800 flex items-center"
+              >
+                <Info className="h-3 w-3 mr-1" />
+                <span>Personalized for you</span>
+              </button>
+            )}
+          </div>
           <span className="text-sm text-gray-500">
             {message.timestamp.toLocaleTimeString()}
           </span>
         </div>
+        
+        {showContextInfo === index && message.personalizationContext && (
+          <div className="mb-3 p-2 bg-indigo-50 rounded-md text-sm">
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-medium text-indigo-800">Answer based on your profile:</span>
+              <button 
+                onClick={() => setShowContextInfo(null)}
+                className="text-indigo-600 hover:text-indigo-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <ul className="text-indigo-700 text-xs space-y-1">
+              <li>Risk appetite: <span className="font-medium capitalize">{message.personalizationContext.riskAppetite}</span></li>
+              {message.personalizationContext.investmentGoals.length > 0 && (
+                <li>Goals: <span className="font-medium">{message.personalizationContext.investmentGoals.map(formatContextItem).join(', ')}</span></li>
+              )}
+              {message.personalizationContext.watchlist.length > 0 && (
+                <li>Watchlist: <span className="font-medium">{message.personalizationContext.watchlist.join(', ')}</span></li>
+              )}
+              {message.personalizationContext.holdings.length > 0 && (
+                <li>Holdings: <span className="font-medium">{message.personalizationContext.holdings.join(', ')}</span></li>
+              )}
+            </ul>
+          </div>
+        )}
+        
         <p className="text-gray-700">{message.content}</p>
       </div>
     </motion.div>
@@ -126,6 +220,21 @@ const Chat: React.FC = () => {
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-3xl mx-auto">
+          {showProfilePrompt && (
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+              <h3 className="font-medium text-indigo-800 mb-2">Get personalized investment advice</h3>
+              <p className="text-indigo-700 mb-4 text-sm">
+                Create your investment profile to get responses tailored to your risk appetite, goals, and interests.
+              </p>
+              <button
+                onClick={() => navigate('/profile')}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Set up profile
+              </button>
+            </div>
+          )}
+          
           {messages.length === 0 ? (
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -149,8 +258,8 @@ const Chat: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
+              {messages.map((message, index) => (
+                <MessageBubble key={message.id} message={message} index={index} />
               ))}
               {isTyping && (
                 <div className="flex items-center space-x-2 text-gray-500">
@@ -177,10 +286,10 @@ const Chat: React.FC = () => {
             />
             <button
               type="submit"
-              disabled={!input.trim()}
+              disabled={!input.trim() || isTyping}
               className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2
                 ${
-                  input.trim()
+                  input.trim() && !isTyping
                     ? "bg-indigo-600 hover:bg-indigo-700 text-white"
                     : "bg-gray-100 text-gray-400 cursor-not-allowed"
                 }`}
