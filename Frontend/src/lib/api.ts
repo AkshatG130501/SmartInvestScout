@@ -133,4 +133,119 @@ export const getPersonalizedChatResponse = async (userId: string, query: string)
   }
 };
 
+// Chat History Types
+export interface ChatMessage {
+  id: string;
+  user_id: string;
+  conversation_id: string;
+  content: string;
+  is_user_message: boolean;
+  personalization_context?: {
+    risk_appetite: string;
+    investment_goals: string[];
+    watchlist: string[];
+    holdings: string[];
+  } | null;
+  created_at: string;
+}
+
+export interface ChatConversation {
+  id: string;
+  user_id: string;
+  title: string;
+  last_message_at: string;
+  created_at: string;
+  messages?: ChatMessage[];
+}
+
+export interface CreateConversationInput {
+  title: string;
+}
+
+export interface CreateMessageInput {
+  conversation_id: string;
+  content: string;
+  is_user_message: boolean;
+  personalization_context?: {
+    risk_appetite: string;
+    investment_goals: string[];
+    watchlist: string[];
+    holdings: string[];
+  } | null;
+}
+
+// Chat History API
+export const getUserConversations = async (userId: string): Promise<ChatConversation[]> => {
+  try {
+    const response = await api.get(`api/chat-history/conversations/${userId}`);
+    return response.data as ChatConversation[];
+  } catch (error: any) {
+    console.error("Error fetching conversations:", error);
+    return [];
+  }
+};
+
+export const getConversation = async (userId: string, conversationId: string): Promise<ChatConversation | null> => {
+  try {
+    const response = await api.get(`api/chat-history/conversations/${userId}/${conversationId}`);
+    return response.data as ChatConversation;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+    console.error("Error fetching conversation:", error);
+    throw error;
+  }
+};
+
+export const createConversation = async (userId: string, data: CreateConversationInput): Promise<ChatConversation> => {
+  try {
+    const response = await api.post(`api/chat-history/conversations/${userId}`, data);
+    return response.data as ChatConversation;
+  } catch (error) {
+    console.error("Error creating conversation:", error);
+    throw error;
+  }
+};
+
+export const updateConversationTitle = async (userId: string, conversationId: string, title: string): Promise<void> => {
+  try {
+    await api.put(`api/chat-history/conversations/${userId}/${conversationId}`, { title });
+  } catch (error) {
+    console.error("Error updating conversation:", error);
+    throw error;
+  }
+};
+
+export const deleteConversation = async (userId: string, conversationId: string): Promise<void> => {
+  try {
+    await api.delete(`api/chat-history/conversations/${userId}/${conversationId}`);
+  } catch (error) {
+    console.error("Error deleting conversation:", error);
+    throw error;
+  }
+};
+
+export const createMessage = async (userId: string, data: CreateMessageInput): Promise<ChatMessage> => {
+  try {
+    const response = await api.post(`api/chat-history/messages/${userId}`, data);
+    return response.data as ChatMessage;
+  } catch (error) {
+    console.error("Error creating message:", error);
+    throw error;
+  }
+};
+
+export const searchConversations = async (userId: string, query: string): Promise<ChatConversation[]> => {
+  try {
+    const response = await api.get(`api/chat-history/search/conversations/${userId}`, {
+      params: { query }
+    });
+    return response.data as ChatConversation[];
+  } catch (error: any) {
+    console.error("Error searching conversations:", error);
+    return [];
+  }
+};
+
 export default api;

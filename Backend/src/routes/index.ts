@@ -4,6 +4,7 @@ import { insightsRouter } from './insights';
 import { documentsRouter } from './documents';
 import { profilesRouter } from './profiles';
 import { chatRouter } from './chat';
+import { chatHistoryRouter } from './chatHistory';
 
 const router = Router();
 
@@ -21,5 +22,8 @@ router.use('/profiles', profilesRouter);
 
 // Chat routes
 router.use('/chat', chatRouter);
+
+// Chat history routes
+router.use('/chat-history', chatHistoryRouter);
 
 export default router;
