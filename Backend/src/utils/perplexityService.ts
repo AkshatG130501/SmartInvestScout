@@ -222,36 +222,7 @@ Make sure the data is based on the most recent developments as of today. Avoid o
     documentType: string
   ): Promise<{ overview: string; sections: Record<string, unknown> }> {
     try {
-      const promt = `Analyze the following ${documentType} and provide a detailed financial analyst-style summary. This document is likely a company annual report (10-K).
-
-      Summarize the content in structured JSON format with the following schema:
-      
-      {
-        "overview": "Brief overview of the company's business and performance",
-        "sections": {
-          "companyOverview": "What the company does, business model, primary customers and industries",
-          "financialHighlights": {
-            "revenue": "Total revenue or revenue range if mentioned",
-            "netIncome": "Net income or loss if available",
-            "cash": "Cash or cash equivalents on hand",
-            "sharesOutstanding": "Shares outstanding",
-            "stockPriceRange": "Price range if mentioned"
-          },
-          "growthStrategy": "Describe how the company plans to grow (e.g., M&A, product expansion, new markets)",
-          "productsAndServices": "Key products, services, and technologies offered",
-          "riskFactors": [
-            "Summarized bullet list of major risks (regulatory, market, supply chain, etc.)"
-          ],
-          "regulatoryAndCompliance": "Any delisting warnings, internal control weaknesses, or legal issues",
-          "recentEvents": "Recent major announcements, acquisitions, divestitures, or executive changes",
-          "governmentIncentives": "Tax credits, subsidies, or policy dependencies mentioned"
-        }
-      }
-      
-      Only return valid JSON with this structure. Don’t add extra text or markdown formatting. Here is the document content:
-      
-      ${documentText.substring(0, 15000)}
-      `;
+      const promt = `Analyze the following ${documentType} and provide a comprehensive summary. Break down the summary into logical sections based on the document type. The response should be in JSON format with the following structure:\n\n{\n  "overview": "Brief overview of the document content",\n  "sections": {\n    "section1Name": "Content for section 1 or [array of items]",\n    "section2Name": "Content for section 2 or [array of items]",\n    "section3Name": { "subsection1": "value", "subsection2": "value" },\n    ...more sections as needed based on document type\n  }\n}\n\nCreate appropriate section names and structure based on the document type. For example:\n- For financial reports: include sections like "financialHighlights", "keyRatios", "segmentPerformance"\n- For legal documents: include sections like "parties", "terms", "obligations", "termination"\n- For research reports: include sections like "methodology", "findings", "recommendations"\n\nAdapt the structure to best represent the content of this specific ${documentType}.\n\nHere is the document text:\n${documentText.substring(0, 15000)}`;
 
       const messages = [
         {

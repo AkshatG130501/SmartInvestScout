@@ -86,65 +86,204 @@ const Summary: React.FC = () => {
   };
 
   const renderSectionContent = (content: unknown) => {
-    if (Array.isArray(content) && typeof content[0] === "object") {
+    // If content is an array of objects (like keyMetrics)
+    if (
+      Array.isArray(content) &&
+      content.length > 0 &&
+      typeof content[0] === "object"
+    ) {
       const firstItem = content[0] as Record<string, unknown>;
       const keys = Object.keys(firstItem);
-      return (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                {keys.map((key) => (
-                  <th
-                    key={key}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    {key.replace(/([A-Z])/g, " $1").trim()}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {content.map((item, rowIndex) => (
-                <tr key={rowIndex}>
+
+      if (keys.length > 0) {
+        return (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
                   {keys.map((key) => (
-                    <td key={key} className="px-6 py-4 text-sm text-gray-500">
-                      {String((item as Record<string, unknown>)[key] || "")}
-                    </td>
+                    <th
+                      key={key}
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {key
+                        .replace(/([A-Z])/g, " $1")
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase() +
+                        key
+                          .replace(/([A-Z])/g, " $1")
+                          .trim()
+                          .slice(1)}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    } else if (Array.isArray(content)) {
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {content.map((item, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {keys.map((key) => (
+                      <td
+                        key={`${rowIndex}-${key}`}
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                      >
+                        {String((item as Record<string, unknown>)[key] || "")}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+    }
+
+    // If content is a simple array of strings or numbers, render as a list
+    else if (Array.isArray(content)) {
       return (
         <ul className="list-disc pl-4 space-y-2">
-          {content.map((item, i) => (
-            <li key={i}>{String(item)}</li>
+          {content.map((item, index) => (
+            <li key={index}>{String(item)}</li>
           ))}
         </ul>
       );
-    } else if (typeof content === "object" && content !== null) {
+    }
+
+    // If content is an object with nested objects (like everspan, cirrata)
+    else if (typeof content === "object" && content !== null) {
+      console.log("Rendering object content:", content);
       return (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {Object.entries(content as Record<string, unknown>).map(
-            ([key, val]) => (
-              <div key={key}>
-                <p className="text-sm font-semibold text-gray-700">
-                  {key.replace(/([A-Z])/g, " $1").trim()}
-                </p>
-                <p className="text-gray-900">{String(val)}</p>
-              </div>
-            )
+            ([key, value]) => {
+              // If the value is a nested object (like performanceMetrics)
+              if (
+                typeof value === "object" &&
+                value !== null &&
+                !Array.isArray(value)
+              ) {
+                return (
+                  <div key={key} className="border rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-3 capitalize">
+                      {key.replace(/([A-Z])/g, " $1").trim()}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(value as Record<string, unknown>).map(
+                        ([nestedKey, nestedValue]) => {
+                          // Check if nestedValue is also an object (deeper nesting)
+                          if (
+                            typeof nestedValue === "object" &&
+                            nestedValue !== null &&
+                            !Array.isArray(nestedValue)
+                          ) {
+                            return (
+                              <div key={nestedKey} className="md:col-span-2">
+                                <h4 className="text-md font-medium text-gray-800 mb-2 capitalize">
+                                  {nestedKey.replace(/([A-Z])/g, " $1").trim()}
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 ml-4">
+                                  {Object.entries(
+                                    nestedValue as Record<string, unknown>
+                                  ).map(([deepKey, deepValue]) => (
+                                    <div
+                                      key={deepKey}
+                                      className="bg-gray-50 p-3 rounded-lg"
+                                    >
+                                      <p className="text-sm text-gray-500 capitalize">
+                                        {deepKey
+                                          .replace(/([A-Z])/g, " $1")
+                                          .trim()}
+                                      </p>
+                                      <p className="font-medium text-gray-900">
+                                        {String(deepValue)}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          // Handle arrays within nested objects
+                          else if (Array.isArray(nestedValue)) {
+                            return (
+                              <div key={nestedKey} className="md:col-span-2">
+                                <p className="text-sm text-gray-500 capitalize mb-2">
+                                  {nestedKey.replace(/([A-Z])/g, " $1").trim()}
+                                </p>
+                                <ul className="list-disc pl-4 space-y-1">
+                                  {nestedValue.map((item, idx) => (
+                                    <li key={idx} className="text-gray-900">
+                                      {String(item)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            );
+                          }
+                          // Regular key-value pairs
+                          else {
+                            return (
+                              <div
+                                key={nestedKey}
+                                className="bg-gray-50 p-3 rounded-lg"
+                              >
+                                <p className="text-sm text-gray-500 capitalize">
+                                  {nestedKey.replace(/([A-Z])/g, " $1").trim()}
+                                </p>
+                                <p className="font-medium text-gray-900">
+                                  {String(nestedValue)}
+                                </p>
+                              </div>
+                            );
+                          }
+                        }
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+              // Handle arrays at the top level
+              else if (Array.isArray(value)) {
+                return (
+                  <div key={key} className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm text-gray-500 capitalize mb-2">
+                      {key.replace(/([A-Z])/g, " $1").trim()}
+                    </p>
+                    <ul className="list-disc pl-4 space-y-1">
+                      {value.map((item, idx) => (
+                        <li key={idx} className="text-gray-900">
+                          {String(item)}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              }
+              // For regular key-value pairs at the top level
+              else {
+                return (
+                  <div key={key} className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm text-gray-500 capitalize">
+                      {key.replace(/([A-Z])/g, " $1").trim()}
+                    </p>
+                    <p className="font-medium text-gray-900">{String(value)}</p>
+                  </div>
+                );
+              }
+            }
           )}
         </div>
       );
-    } else if (typeof content === "string") {
-      return <p className="text-gray-700 leading-relaxed">{content}</p>;
     }
-    return null;
+
+    // If content is a string, render as a paragraph
+    else if (typeof content === "string") {
+      return <p>{content}</p>;
+    } else {
+      return null;
+    }
   };
 
   return (
