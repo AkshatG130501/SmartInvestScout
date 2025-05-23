@@ -1,10 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Send, Bot, User, Loader2, Info, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Search,
+  Send,
+  Bot,
+  User,
+  Loader2,
+  Info,
+  X,
+} from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useProfile } from "../contexts/ProfileContext";
 import { getPersonalizedChatResponse } from "../lib/api";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
@@ -72,16 +82,19 @@ const Chat: React.FC = () => {
     try {
       if (user) {
         // Get personalized response from backend
-        const response = await getPersonalizedChatResponse(user.id, input.trim());
-        
+        const response = await getPersonalizedChatResponse(
+          user.id,
+          input.trim()
+        );
+
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           type: "ai",
           content: response.content,
           timestamp: new Date(),
-          personalizationContext: response.personalizationContext
+          personalizationContext: response.personalizationContext,
         };
-        
+
         setMessages((prev) => [...prev, aiMessage]);
       } else {
         // Fallback for non-logged in users
@@ -89,7 +102,8 @@ const Chat: React.FC = () => {
           const aiMessage: Message = {
             id: (Date.now() + 1).toString(),
             type: "ai",
-            content: "For personalized investment insights tailored to your risk profile and interests, please sign in and set up your profile.",
+            content:
+              "For personalized investment insights tailored to your risk profile and interests, please sign in and set up your profile.",
             timestamp: new Date(),
           };
           setMessages((prev) => [...prev, aiMessage]);
@@ -100,7 +114,8 @@ const Chat: React.FC = () => {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "ai",
-        content: "Sorry, I encountered an error while processing your request. Please try again later.",
+        content:
+          "Sorry, I encountered an error while processing your request. Please try again later.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -118,10 +133,13 @@ const Chat: React.FC = () => {
   };
 
   const formatContextItem = (item: string) => {
-    return item.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return item.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
-  const MessageBubble: React.FC<{ message: Message; index: number }> = ({ message, index }) => (
+  const MessageBubble: React.FC<{ message: Message; index: number }> = ({
+    message,
+    index,
+  }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -147,7 +165,7 @@ const Chat: React.FC = () => {
               {message.type === "ai" ? "SmartInvest Scout" : "You"}
             </span>
             {message.type === "ai" && message.personalizationContext && (
-              <button 
+              <button
                 onClick={() => toggleContextInfo(index)}
                 className="ml-2 text-xs text-indigo-600 hover:text-indigo-800 flex items-center"
               >
@@ -160,12 +178,14 @@ const Chat: React.FC = () => {
             {message.timestamp.toLocaleTimeString()}
           </span>
         </div>
-        
+
         {showContextInfo === index && message.personalizationContext && (
           <div className="mb-3 p-2 bg-indigo-50 rounded-md text-sm">
             <div className="flex justify-between items-center mb-1">
-              <span className="font-medium text-indigo-800">Answer based on your profile:</span>
-              <button 
+              <span className="font-medium text-indigo-800">
+                Answer based on your profile:
+              </span>
+              <button
                 onClick={() => setShowContextInfo(null)}
                 className="text-indigo-600 hover:text-indigo-800"
               >
@@ -173,21 +193,45 @@ const Chat: React.FC = () => {
               </button>
             </div>
             <ul className="text-indigo-700 text-xs space-y-1">
-              <li>Risk appetite: <span className="font-medium capitalize">{message.personalizationContext.riskAppetite}</span></li>
+              <li>
+                Risk appetite:{" "}
+                <span className="font-medium capitalize">
+                  {message.personalizationContext.riskAppetite}
+                </span>
+              </li>
               {message.personalizationContext.investmentGoals.length > 0 && (
-                <li>Goals: <span className="font-medium">{message.personalizationContext.investmentGoals.map(formatContextItem).join(', ')}</span></li>
+                <li>
+                  Goals:{" "}
+                  <span className="font-medium">
+                    {message.personalizationContext.investmentGoals
+                      .map(formatContextItem)
+                      .join(", ")}
+                  </span>
+                </li>
               )}
               {message.personalizationContext.watchlist.length > 0 && (
-                <li>Watchlist: <span className="font-medium">{message.personalizationContext.watchlist.join(', ')}</span></li>
+                <li>
+                  Watchlist:{" "}
+                  <span className="font-medium">
+                    {message.personalizationContext.watchlist.join(", ")}
+                  </span>
+                </li>
               )}
               {message.personalizationContext.holdings.length > 0 && (
-                <li>Holdings: <span className="font-medium">{message.personalizationContext.holdings.join(', ')}</span></li>
+                <li>
+                  Holdings:{" "}
+                  <span className="font-medium">
+                    {message.personalizationContext.holdings.join(", ")}
+                  </span>
+                </li>
               )}
             </ul>
           </div>
         )}
-        
-        <p className="text-gray-700">{message.content}</p>
+
+        <div className="prose prose-indigo text-gray-700">
+          <ReactMarkdown>{message.content}</ReactMarkdown>
+        </div>
       </div>
     </motion.div>
   );
@@ -222,19 +266,22 @@ const Chat: React.FC = () => {
         <div className="max-w-3xl mx-auto">
           {showProfilePrompt && (
             <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
-              <h3 className="font-medium text-indigo-800 mb-2">Get personalized investment advice</h3>
+              <h3 className="font-medium text-indigo-800 mb-2">
+                Get personalized investment advice
+              </h3>
               <p className="text-indigo-700 mb-4 text-sm">
-                Create your investment profile to get responses tailored to your risk appetite, goals, and interests.
+                Create your investment profile to get responses tailored to your
+                risk appetite, goals, and interests.
               </p>
               <button
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate("/profile")}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 Set up profile
               </button>
             </div>
           )}
-          
+
           {messages.length === 0 ? (
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -259,7 +306,11 @@ const Chat: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {messages.map((message, index) => (
-                <MessageBubble key={message.id} message={message} index={index} />
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  index={index}
+                />
               ))}
               {isTyping && (
                 <div className="flex items-center space-x-2 text-gray-500">

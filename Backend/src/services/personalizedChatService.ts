@@ -49,7 +49,7 @@ export class PersonalizedChatService {
     try {
       // Get user profile
       const userProfile = await this.profileService.getUserProfile(userId);
-      
+
       if (!userProfile) {
         // If no profile exists, just use the query without personalization
         return this.getNonPersonalizedResponse(query);
@@ -57,23 +57,25 @@ export class PersonalizedChatService {
 
       // Construct personalized prompt
       const personalizedPrompt = this.constructPersonalizedPrompt(userProfile, query);
-      
+
       // Get response from Sonar API
       const response = await this.client.chat.completions.create({
         model: 'sonar-pro',
         messages: [
           {
             role: 'system',
-            content: 'You are a financial assistant providing personalized investment advice based on the user\'s profile.'
+            content:
+              "You are a financial assistant providing personalized investment advice based on the user's profile.",
           },
           {
             role: 'user',
-            content: personalizedPrompt
-          }
-        ]
+            content: personalizedPrompt,
+          },
+        ],
       });
 
-      const content = response.choices[0].message.content || 'Sorry, I couldn\'t generate a response.';
+      const content =
+        response.choices[0].message.content || "Sorry, I couldn't generate a response.";
 
       return {
         content,
@@ -81,14 +83,14 @@ export class PersonalizedChatService {
           riskAppetite: userProfile.risk_appetite,
           investmentGoals: userProfile.investment_goals,
           watchlist: userProfile.watchlist,
-          holdings: userProfile.holdings.map(h => h.name)
-        }
+          holdings: userProfile.holdings.map((h) => h.name),
+        },
       };
     } catch (error) {
       logger.error('Error in getPersonalizedResponse:', error);
       return {
         content: 'Sorry, there was an error processing your request.',
-        personalizationContext: null
+        personalizationContext: null,
       };
     }
   }
@@ -103,53 +105,68 @@ export class PersonalizedChatService {
         messages: [
           {
             role: 'system',
-            content: 'You are a financial assistant providing investment advice.'
+            content:
+              'You are a financial assistant providing investment advice. Respond in Markdown format. Do not include citations or references like [1], [source], etc.',
           },
           {
             role: 'user',
-            content: query
-          }
-        ]
+            content: query,
+          },
+        ],
       });
 
-      const content = response.choices[0].message.content || 'Sorry, I couldn\'t generate a response.';
+      const content =
+        response.choices[0].message.content || "Sorry, I couldn't generate a response.";
 
       return {
         content,
-        personalizationContext: null
+        personalizationContext: null,
       };
     } catch (error) {
       logger.error('Error in getNonPersonalizedResponse:', error);
       return {
         content: 'Sorry, there was an error processing your request.',
-        personalizationContext: null
+        personalizationContext: null,
       };
     }
   }
 
-  /**
-   * Construct a personalized prompt based on user profile
-   */
   private constructPersonalizedPrompt(profile: UserProfile, query: string): string {
-    // Format holdings as a readable string
-    const holdingsStr = profile.holdings.length > 0
-      ? profile.holdings.map(h => `${h.name} (${h.symbol})`).join(', ')
-      : 'None';
+    const holdingsStr =
+      profile.holdings.length > 0
+        ? profile.holdings.map((h) => `- ${h.name} (${h.symbol})`).join('\n')
+        : '- None';
 
-    // Format investment goals as a readable string
-    const goalsStr = profile.investment_goals.join(', ');
+    const goalsStr = profile.investment_goals.map((g) => `- ${g}`).join('\n');
+    const watchlistStr = profile.watchlist.map((w) => `- ${w}`).join('\n');
 
-    // Construct the prompt
-    return `You are a financial assistant for a user with the following profile:
-- Risk appetite: ${profile.risk_appetite}
-- Goals: ${goalsStr}
-- Watchlist: ${profile.watchlist.join(', ')}
-- Holdings: ${holdingsStr}
-
-Now answer this question from the user:
-"${query}"
-
-Tailor the answer to their risk level and current interests. If the query is about stocks or sectors in their watchlist or holdings, highlight that connection. If the query is about investment strategies, align your advice with their risk appetite and goals.`;
+    return `## User Financial Profile
+  
+  **Risk Appetite:** ${profile.risk_appetite}
+  
+  **Investment Goals:**
+  ${goalsStr}
+  
+  **Watchlist:**
+  ${watchlistStr}
+  
+  **Holdings:**
+  ${holdingsStr}
+  
+  ---
+  
+  ### User's Question
+  > ${query}
+  
+  ---
+  
+  ### Instructions for the Assistant
+  - Tailor the answer to their **risk level** and **investment goals**.
+  - If the query mentions stocks or sectors in their **watchlist** or **holdings**, highlight those.
+  - If the query is about **investment strategies**, align your advice accordingly.
+  - Format the entire response in **Markdown**.
+  - **Do not** include citations or numbered references like [1], [2], or [source].
+  `;
   }
 
   /**
@@ -158,14 +175,14 @@ Tailor the answer to their risk level and current interests. If the query is abo
   async getPersonalizedResponseStream(
     userId: string,
     query: string
-  ): Promise<{ stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>, context: any }> {
+  ): Promise<{ stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>; context: any }> {
     try {
       // Get user profile
       const userProfile = await this.profileService.getUserProfile(userId);
-      
+
       let personalizedPrompt = query;
       let context = null;
-      
+
       if (userProfile) {
         // Construct personalized prompt
         personalizedPrompt = this.constructPersonalizedPrompt(userProfile, query);
@@ -173,24 +190,25 @@ Tailor the answer to their risk level and current interests. If the query is abo
           riskAppetite: userProfile.risk_appetite,
           investmentGoals: userProfile.investment_goals,
           watchlist: userProfile.watchlist,
-          holdings: userProfile.holdings.map(h => h.name)
+          holdings: userProfile.holdings.map((h) => h.name),
         };
       }
-      
+
       // Get streaming response from Sonar API
       const stream = await this.client.chat.completions.create({
         model: 'sonar-pro',
         messages: [
           {
             role: 'system',
-            content: 'You are a financial assistant providing personalized investment advice based on the user\'s profile.'
+            content:
+              "You are a financial assistant providing personalized investment advice based on the user's profile.",
           },
           {
             role: 'user',
-            content: personalizedPrompt
-          }
+            content: personalizedPrompt,
+          },
         ],
-        stream: true
+        stream: true,
       });
 
       return { stream, context };

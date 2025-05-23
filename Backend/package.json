@@ -18,6 +18,7 @@
   "license": "ISC",
   "description": "Backend for SmartInvestScout application",
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
     "@types/axios": "^0.9.36",
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.24",
