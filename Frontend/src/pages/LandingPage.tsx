@@ -1,13 +1,12 @@
-import React, { useEffect } from 'react';
-import Header from '../components/Header';
-import HeroSection from '../components/HeroSection';
-import HowItWorksSection from '../components/HowItWorksSection';
-import Footer from '../components/Footer';
+import React, { useEffect } from "react";
+import Header from "../components/Header";
+import HeroSection from "../components/HeroSection";
+import HowItWorksSection from "../components/HowItWorksSection";
+import Footer from "../components/Footer";
 
 const LandingPage: React.FC = () => {
   useEffect(() => {
-    // Update the page title
-    document.title = 'SmartInvest Scout - Investment Research, Reimagined';
+    document.title = "SmartInvest Scout - Investment Research, Reimagined";
   }, []);
 
   return (
