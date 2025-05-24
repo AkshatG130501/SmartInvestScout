@@ -7,6 +7,7 @@ export * from "./types";
 export * from "./documents";
 export * from "./profiles";
 export * from "./chat";
+export * from "./search";
 
 // Export the base API client as default
 export default api;
