@@ -11,7 +11,10 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist",
-    "prebuild": "npm run clean"
+    "prebuild": "npm run clean",
+    "migrate:search": "ts-node src/scripts/run_search_migration.ts",
+    "test:search": "ts-node src/scripts/test_search_suggestions.ts",
+    "test:api": "ts-node src/scripts/test_api_endpoints.ts"
   },
   "keywords": [],
   "author": "",

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { DocumentSummary } from "../lib/api";
+import { saveSearchQuery, getRecentSearches } from "../lib/api/search";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import SearchSuggestions from "../components/SearchSuggestions";
 import {
-  Search,
   MessageSquare,
   Upload,
   TrendingUp,
@@ -16,7 +17,7 @@ import {
 import Header from "../components/Header";
 import UploadModal from "../components/UploadModal";
 
-interface SearchHistoryItem {
+interface SearchHistoryItemDisplay {
   id: string;
   query: string;
   timestamp: Date;
@@ -37,38 +38,50 @@ const suggestedTopics = [
   },
 ];
 
-const recentSearches: SearchHistoryItem[] = [
-  {
-    id: "1",
-    query: "TSLA earnings forecast",
-    timestamp: new Date("2024-03-10T10:30:00"),
-  },
-  {
-    id: "2",
-    query: "AI in Healthcare trends",
-    timestamp: new Date("2024-03-09T15:45:00"),
-  },
-  {
-    id: "3",
-    query: "Bitcoin market analysis",
-    timestamp: new Date("2024-03-08T09:20:00"),
-  },
-];
+// Initial empty array for recent searches
+const initialRecentSearches: SearchHistoryItemDisplay[] = [];
 
 const Dashboard: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<SearchHistoryItemDisplay[]>(initialRecentSearches);
+  const [isLoadingSearches, setIsLoadingSearches] = useState(false);
 
   useEffect(() => {
     document.title = "Dashboard - SmartInvest Scout";
+    
+    // Fetch recent searches when component mounts
+    const fetchRecentSearches = async () => {
+      setIsLoadingSearches(true);
+      try {
+        const searches = await getRecentSearches(5);
+        // Convert timestamp strings to Date objects for display
+        const formattedSearches = searches.map(search => ({
+          id: search.id,
+          query: search.query,
+          timestamp: new Date(search.timestamp)
+        }));
+        setRecentSearches(formattedSearches);
+      } catch (error) {
+        console.error('Error fetching recent searches:', error);
+      } finally {
+        setIsLoadingSearches(false);
+      }
+    };
+    
+    fetchRecentSearches();
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search/${encodeURIComponent(searchQuery.trim())}`);
-    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    // Extract just the symbol if it's in the format "SYMBOL - Company Name"
+    const query = suggestion.includes(' - ') ? suggestion.split(' - ')[0] : suggestion;
+    // Save search query to history
+    saveSearchQuery(query);
+    navigate(`/search/${encodeURIComponent(query)}`);
   };
 
   const handleUploadClick = () => {
@@ -97,16 +110,12 @@ const Dashboard: React.FC = () => {
             {/* Search Section */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search stocks, companies, or investment topics..."
-                    className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors duration-200"
-                  />
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                </div>
+                <SearchSuggestions
+                onSuggestionClick={handleSuggestionClick}
+                placeholder="Search stocks, companies, or investment topics..."
+                minQueryLength={2}
+                debounceDelay={300}
+              />
               </form>
             </div>
 
@@ -193,28 +202,35 @@ const Dashboard: React.FC = () => {
                 <Clock className="h-5 w-5 text-gray-400" />
               </div>
               <div className="space-y-3">
-                {recentSearches.map((search) => (
-                  <motion.button
-                    key={search.id}
-                    whileHover={{ scale: 1.01 }}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg group transition-colors duration-200"
-                    onClick={() =>
-                      navigate(`/search/${encodeURIComponent(search.query)}`)
-                    }
-                  >
-                    <span className="text-gray-700 group-hover:text-indigo-600">
-                      {search.query}
-                    </span>
-                    <span className="text-sm text-gray-400">
-                      {new Intl.DateTimeFormat("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }).format(search.timestamp)}
-                    </span>
-                  </motion.button>
-                ))}
+                {isLoadingSearches ? (
+                  <div className="text-center py-4 text-gray-500">Loading recent searches...</div>
+                ) : recentSearches.length > 0 ? (
+                  recentSearches.map((search) => (
+                    <motion.button
+                      key={search.id}
+                      whileHover={{ scale: 1.01 }}
+                      className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg group transition-colors duration-200"
+                      onClick={() => {
+                        saveSearchQuery(search.query);
+                        navigate(`/search/${encodeURIComponent(search.query)}`);
+                      }}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-gray-100 rounded-full p-2">
+                          <Clock className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <span className="text-gray-700">{search.query}</span>
+                      </div>
+                      <span className="text-sm text-gray-400">
+                        {search.timestamp.toLocaleDateString()}
+                      </span>
+                    </motion.button>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    No recent searches found. Try searching for something!
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
