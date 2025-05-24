@@ -1,6 +1,6 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { BarChart2, Github, Heart, Twitter } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import { BarChart2, Github, Heart, Twitter } from "lucide-react";
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -45,7 +45,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li>
                 <Link
-                  to="#"
+                  to="/features"
                   className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
                 >
                   Features
@@ -53,26 +53,10 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to="#"
+                  to="/pricing"
                   className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
                 >
                   Pricing
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="#"
-                  className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
-                >
-                  API
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="#"
-                  className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
-                >
-                  Integrations
                 </Link>
               </li>
             </ul>
@@ -83,7 +67,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li>
                 <Link
-                  to="#"
+                  to="/about"
                   className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
                 >
                   About

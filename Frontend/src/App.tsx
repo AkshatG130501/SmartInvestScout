@@ -11,6 +11,9 @@ import Settings from './pages/Settings';
 import Summary from './pages/Summary';
 import TermsOfUse from './pages/TermsOfUse';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import About from './pages/About';
+import Features from './pages/Features';
+import Pricing from './pages/Pricing';
 
 function App() {
   return (
@@ -22,6 +25,9 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/search/:query" element={<SearchResults />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/terms" element={<TermsOfUse />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route

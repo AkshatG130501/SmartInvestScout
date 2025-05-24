@@ -61,7 +61,7 @@ const Header: React.FC = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8 items-center">
             <Link
-              to="#"
+              to="/about"
               className={`font-medium transition-colors duration-300 ${
                 isScrolled
                   ? 'text-gray-600 hover:text-indigo-700'
@@ -71,7 +71,7 @@ const Header: React.FC = () => {
               About
             </Link>
             <Link
-              to="#"
+              to="/features"
               className={`font-medium transition-colors duration-300 ${
                 isScrolled
                   ? 'text-gray-600 hover:text-indigo-700'
@@ -81,7 +81,7 @@ const Header: React.FC = () => {
               Features
             </Link>
             <Link
-              to="#"
+              to="/pricing"
               className={`font-medium transition-colors duration-300 ${
                 isScrolled
                   ? 'text-gray-600 hover:text-indigo-700'
