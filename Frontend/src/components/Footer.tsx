@@ -99,18 +99,18 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to="#"
+                  to="/privacy"
                   className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
                 >
-                  Privacy
+                  Privacy Policy
                 </Link>
               </li>
               <li>
                 <Link
-                  to="#"
+                  to="/terms"
                   className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
                 >
-                  Terms
+                  Terms of Use
                 </Link>
               </li>
             </ul>
