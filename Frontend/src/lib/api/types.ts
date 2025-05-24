@@ -101,6 +101,12 @@ export interface ChatMessage {
   user_id: string;
   message: string;
   response: string;
+  personalization_context?: {
+    riskAppetite: string;
+    investmentGoals: string[];
+    watchlist: string[];
+    holdings: string[];
+  } | null;
   created_at: string;
 }
 
@@ -112,3 +118,45 @@ export interface ChatHistoryResponse {
   hasMore: boolean;
   nextCursor?: string;
 }
+
+// ==============================
+// Conversation Types
+// ==============================
+
+/**
+ * A message within a conversation
+ */
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  personalization_context?: {
+    riskAppetite: string;
+    investmentGoals: string[];
+    watchlist: string[];
+    holdings: string[];
+  } | null;
+  timestamp: string;
+}
+
+/**
+ * A conversation containing multiple chat messages
+ */
+export interface Conversation {
+  id: string;
+  user_id: string;
+  title: string;
+  messages: ConversationMessage[];
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Paginated response for conversations
+ */
+export interface ConversationsResponse {
+  conversations: Conversation[];
+  hasMore: boolean;
+  nextCursor?: string;
+}
+
+
