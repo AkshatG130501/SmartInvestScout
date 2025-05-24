@@ -1,19 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Search,
   Send,
   Bot,
   User,
   Loader2,
   Info,
   X,
+  MessageSquare,
+  Plus,
 } from "lucide-react";
+import ConversationSidebar from "../components/ConversationSidebar";
 import { useAuth } from "../contexts/AuthContext";
 import { useProfile } from "../contexts/ProfileContext";
 import { getPersonalizedChatResponse } from "../lib/api";
+import { createConversation, addMessageToConversation, getActiveConversation } from "../lib/api/conversations";
+import { Conversation, ConversationMessage } from "../lib/api/types";
 import ReactMarkdown from "react-markdown";
 
 interface Message {
@@ -29,6 +32,25 @@ interface Message {
   } | null;
 }
 
+// Convert ConversationMessage to Message format
+function conversationMessageToMessage(message: ConversationMessage): Message {
+  return {
+    id: new Date(message.timestamp).getTime().toString(),
+    type: message.role === 'user' ? 'user' : 'ai',
+    content: message.content,
+    timestamp: new Date(message.timestamp),
+    personalizationContext: message.personalization_context || null
+  };
+}
+
+// Convert Conversation to Message[] format
+function conversationToMessages(conversation: Conversation): Message[] {
+  if (!conversation || !conversation.messages || conversation.messages.length === 0) {
+    return [];
+  }
+  return conversation.messages.map(conversationMessageToMessage);
+}
+
 const suggestedPrompts = [
   "What's driving Apple's Q2 rally?",
   "Is Microsoft's cloud growth sustainable?",
@@ -40,11 +62,14 @@ const Chat: React.FC = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const [messages, setMessages] = useState<Message[]>([]);
+  // Message end ref for scrolling
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [showContextInfo, setShowContextInfo] = useState<number | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showConversationSidebar, setShowConversationSidebar] = useState(false);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const navigate = useNavigate();
 
   const scrollToBottom = () => {
@@ -55,6 +80,8 @@ const Chat: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
+
+
   useEffect(() => {
     document.title = "Ask Anything - SmartInvest Scout";
   }, []);
@@ -63,6 +90,33 @@ const Chat: React.FC = () => {
   useEffect(() => {
     setShowProfilePrompt(!!user && !profile);
   }, [user, profile]);
+
+  // Initialize conversation when component mounts
+  useEffect(() => {
+    // If user is logged in but no active conversation, check if there's an active one to load
+    const loadActiveConversation = async () => {
+      if (user && !activeConversation && messages.length === 0) {
+        try {
+          // Try to get the active conversation for this user
+          const conversation = await getActiveConversation(user.id);
+          
+          if (conversation) {
+            // If there's an active conversation, load it
+            setActiveConversation(conversation);
+            setMessages(conversationToMessages(conversation));
+            console.log('Loaded active conversation:', conversation.id);
+          } else {
+            // No active conversation, ready for a new one
+            console.log('Ready for a new conversation');
+          }
+        } catch (error) {
+          console.error('Error loading active conversation:', error);
+        }
+      }
+    };
+    
+    loadActiveConversation();
+  }, [user, activeConversation, messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +129,7 @@ const Chat: React.FC = () => {
       timestamp: new Date(),
     };
 
+    // Add the user message to the UI immediately
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsTyping(true);
@@ -84,7 +139,8 @@ const Chat: React.FC = () => {
         // Get personalized response from backend
         const response = await getPersonalizedChatResponse(
           user.id,
-          input.trim()
+          input.trim(),
+          activeConversation?.id // Pass the conversation ID if we have one
         );
 
         const aiMessage: Message = {
@@ -95,7 +151,33 @@ const Chat: React.FC = () => {
           personalizationContext: response.personalizationContext,
         };
 
+        // Add the AI response to the UI
         setMessages((prev) => [...prev, aiMessage]);
+
+        // Save the conversation
+        try {
+          if (activeConversation) {
+            // Add to existing conversation
+            const updatedConversation = await addMessageToConversation(
+              activeConversation.id,
+              input.trim(),
+              response.content,
+              response.personalizationContext
+            );
+            setActiveConversation(updatedConversation);
+          } else {
+            // Create a new conversation
+            const newConversation = await createConversation(
+              user.id,
+              input.trim(),
+              response.content,
+              response.personalizationContext
+            );
+            setActiveConversation(newConversation);
+          }
+        } catch (saveError) {
+          console.error("Error saving conversation:", saveError);
+        }
       } else {
         // Fallback for non-logged in users
         setTimeout(() => {
@@ -124,6 +206,68 @@ const Chat: React.FC = () => {
     }
   };
 
+  // Handle starting a new chat
+  const handleNewChat = async () => {
+    // Clear the active conversation in the UI
+    setActiveConversation(null);
+    setMessages([]);
+    setShowConversationSidebar(false);
+    
+    // If the user is logged in, we should also deactivate any active conversation in the database
+    if (user) {
+      try {
+        // Call a new endpoint to deactivate all active conversations
+        await fetch(`/api/conversations/user/${user.id}/deactivate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.error('Error deactivating conversations:', error);
+      }
+    }
+  };
+
+  // Handle selecting a conversation from the sidebar
+  const handleSelectConversation = async (conversation: Conversation) => {
+    // First, clear any existing messages to prevent duplicates
+    setMessages([]);
+    
+    // Set the active conversation
+    setActiveConversation(conversation);
+    
+    // Convert conversation messages to our UI format
+    const formattedMessages = conversationToMessages(conversation);
+    setMessages(formattedMessages);
+    
+    // Close the sidebar on mobile
+    setShowConversationSidebar(false);
+    
+    // If the user is logged in, mark this conversation as active
+    if (user) {
+      try {
+        // First deactivate all conversations
+        await fetch(`/api/conversations/user/${user.id}/deactivate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        // Then update this conversation to be active
+        await fetch(`/api/conversations/${conversation.id}/activate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.error('Error updating conversation active status:', error);
+      }
+    }
+  };
+
   const toggleContextInfo = (index: number) => {
     if (showContextInfo === index) {
       setShowContextInfo(null);
@@ -140,9 +284,7 @@ const Chat: React.FC = () => {
     message,
     index,
   }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className={`flex items-start space-x-3 ${
         message.type === "ai" ? "bg-white" : "bg-indigo-50"
       } rounded-lg p-4 mb-4`}
@@ -233,7 +375,7 @@ const Chat: React.FC = () => {
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
   return (
@@ -249,14 +391,22 @@ const Chat: React.FC = () => {
             <span>Back to Dashboard</span>
           </button>
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search previous chats..."
-                className="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors duration-200"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-            </div>
+            <button
+              onClick={() => setShowConversationSidebar(true)}
+              className="flex items-center px-4 py-2 text-sm text-indigo-600 hover:text-indigo-800 border border-indigo-200 hover:border-indigo-400 rounded-lg transition-colors duration-200"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Conversations
+            </button>
+            {activeConversation && (
+              <button
+                onClick={handleNewChat}
+                className="flex items-center px-4 py-2 text-sm text-indigo-600 hover:text-indigo-800 border border-indigo-200 hover:border-indigo-400 rounded-lg transition-colors duration-200"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Chat
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -351,6 +501,18 @@ const Chat: React.FC = () => {
           </form>
         </div>
       </div>
+
+      {/* Conversation Sidebar */}
+      {user && (
+        <ConversationSidebar
+          userId={user.id}
+          isOpen={showConversationSidebar}
+          onClose={() => setShowConversationSidebar(false)}
+          onSelectConversation={handleSelectConversation}
+          onNewChat={handleNewChat}
+          activeConversationId={activeConversation?.id}
+        />
+      )}
     </div>
   );
 };

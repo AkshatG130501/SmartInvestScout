@@ -6,11 +6,20 @@ import { formatErrorMessage } from './errors';
  * Gets a personalized chat response based on user profile
  * @param userId The ID of the user
  * @param query The user's query
+ * @param conversationId Optional ID of the conversation to add this message to
  * @returns The personalized chat response
  */
-export const getPersonalizedChatResponse = async (userId: string, query: string): Promise<ChatResponse> => {
+export const getPersonalizedChatResponse = async (
+  userId: string, 
+  query: string,
+  conversationId?: string
+): Promise<ChatResponse> => {
   try {
-    const response = await api.post('api/chat/personalized-query', { userId, query });
+    const response = await api.post('api/chat/personalized-query', { 
+      userId, 
+      query,
+      conversationId
+    });
     return response.data as ChatResponse;
   } catch (error: unknown) {
     console.error("Error getting personalized chat response:", formatErrorMessage(error));
