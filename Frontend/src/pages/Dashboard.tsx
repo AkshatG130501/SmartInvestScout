@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { DocumentSummary } from "../lib/api";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -13,7 +14,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Header from "../components/Header";
-import { useAuth } from "../contexts/AuthContext";
 import UploadModal from "../components/UploadModal";
 
 interface SearchHistoryItem {
@@ -75,7 +75,7 @@ const Dashboard: React.FC = () => {
     setIsUploadModalOpen(true);
   };
 
-  const handleUploadComplete = (summary: any) => {
+  const handleUploadComplete = (summary: DocumentSummary) => {
     // Store the summary in session storage to pass to the Summary page
     sessionStorage.setItem("documentSummary", JSON.stringify(summary));
     navigate("/summary");

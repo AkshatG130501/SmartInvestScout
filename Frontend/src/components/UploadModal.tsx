@@ -5,7 +5,7 @@ import { X, Upload as UploadIcon, FileText } from "lucide-react";
 import { Progress } from "./ui/progress";
 import { formatFileSize } from "../lib/utils";
 import Button from "./Button";
-import { uploadAndAnalyzeDocument } from "../lib/api";
+import { uploadAndAnalyzeDocument, DocumentSummary } from "../lib/api";
 
 const ACCEPTED_FILE_TYPES = {
   "application/pdf": [".pdf"],
@@ -20,7 +20,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadComplete: (summary: any) => void;
+  onUploadComplete: (summary: DocumentSummary) => void;
 }
 
 const UploadModal: React.FC<UploadModalProps> = ({
