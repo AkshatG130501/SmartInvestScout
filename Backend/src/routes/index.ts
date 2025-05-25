@@ -6,6 +6,7 @@ import { profilesRouter } from './profiles';
 import { chatRouter } from './chat';
 import { conversationsRouter } from './conversations';
 import { searchRouter } from './search';
+import alertsRouter from './alerts';
 
 const router = Router();
 
@@ -29,5 +30,8 @@ router.use('/conversations', conversationsRouter);
 
 // Search routes
 router.use('/search', searchRouter);
+
+// Alerts routes
+router.use('/alerts', alertsRouter);
 
 export default router;
