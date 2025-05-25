@@ -158,7 +158,7 @@ export async function querySonarForEvents(timeframe: number = 4): Promise<Market
           Authorization: `Bearer ${SONAR_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        timeout: 30000 // 30 second timeout
+        timeout: 60000 // 30 second timeout
       }
     );
 

@@ -5,7 +5,7 @@
 
 // API Configuration
 export const API = {
-  DEFAULT_TIMEOUT: 30000,
+  DEFAULT_TIMEOUT: 60000,
   DEFAULT_PAGE_SIZE: 20,
 };
 

@@ -49,28 +49,30 @@ export class ProfileService {
   /**
    * Create a new user profile
    */
-  async createUserProfile(userId: string, profileData: UserProfileInput): Promise<UserProfile | null> {
+  async createUserProfile(
+    userId: string,
+    profileData: UserProfileInput
+  ): Promise<UserProfile | null> {
     try {
       // Log the Supabase URL (without the key for security)
       logger.info(`Using Supabase URL: ${supabaseUrl}`);
-      logger.info(`Creating profile for user ${userId} with data structure: ${JSON.stringify({
-        risk_appetite: profileData.risk_appetite,
-        investment_goals: profileData.investment_goals?.length || 0,
-        watchlist: profileData.watchlist?.length || 0,
-        holdings: profileData.holdings?.length || 0
-      })}`);
-      
+      logger.info(
+        `Creating profile for user ${userId} with data structure: ${JSON.stringify({
+          risk_appetite: profileData.risk_appetite,
+          investment_goals: profileData.investment_goals?.length || 0,
+          watchlist: profileData.watchlist?.length || 0,
+          holdings: profileData.holdings?.length || 0,
+        })}`
+      );
+
       // Check if the table exists by attempting a minimal query
-      const { error: tableCheckError } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .limit(1);
-      
+      const { error: tableCheckError } = await supabase.from('user_profiles').select('id').limit(1);
+
       if (tableCheckError) {
         logger.error(`Table check error: ${tableCheckError.message}`);
         throw new Error(`Table 'user_profiles' may not exist: ${tableCheckError.message}`);
       }
-      
+
       const { data, error } = await supabase
         .from('user_profiles')
         .insert([
@@ -79,8 +81,8 @@ export class ProfileService {
             risk_appetite: profileData.risk_appetite,
             investment_goals: profileData.investment_goals,
             watchlist: profileData.watchlist,
-            holdings: profileData.holdings
-          }
+            holdings: profileData.holdings,
+          },
         ])
         .select()
         .single();
@@ -102,7 +104,10 @@ export class ProfileService {
   /**
    * Update an existing user profile
    */
-  async updateUserProfile(userId: string, profileData: Partial<UserProfileInput>): Promise<UserProfile | null> {
+  async updateUserProfile(
+    userId: string,
+    profileData: Partial<UserProfileInput>
+  ): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
@@ -128,10 +133,7 @@ export class ProfileService {
    */
   async deleteUserProfile(userId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('user_id', userId);
+      const { error } = await supabase.from('user_profiles').delete().eq('user_id', userId);
 
       if (error) {
         logger.error(`Error deleting user profile: ${error.message}`);
