@@ -28,8 +28,7 @@ interface NewsItem {
 
 export interface DocumentSummary {
   documentType: string;
-  overview: string;
-  sections: Record<string, unknown>;
+  dynamicSummary: string;
 }
 
 export interface FixedDocumentSummary {
@@ -174,8 +173,7 @@ Make sure the data is based on the most recent developments as of today. Avoid o
 
       return {
         documentType,
-        overview: dynamicSummary.overview,
-        sections: dynamicSummary.sections,
+        dynamicSummary: dynamicSummary.markdown,
       };
     } catch (error) {
       logger.error('Error analyzing document:', error);
@@ -220,19 +218,34 @@ Make sure the data is based on the most recent developments as of today. Avoid o
   private async getDynamicSummaryByType(
     documentText: string,
     documentType: string
-  ): Promise<{ overview: string; sections: Record<string, unknown> }> {
+  ): Promise<{ markdown: string }> {
     try {
-      const promt = `Analyze the following ${documentType} and provide a comprehensive summary. Break down the summary into logical sections based on the document type. The response should be in JSON format with the following structure:\n\n{\n  "overview": "Brief overview of the document content",\n  "sections": {\n    "section1Name": "Content for section 1 or [array of items]",\n    "section2Name": "Content for section 2 or [array of items]",\n    "section3Name": { "subsection1": "value", "subsection2": "value" },\n    ...more sections as needed based on document type\n  }\n}\n\nCreate appropriate section names and structure based on the document type. For example:\n- For financial reports: include sections like "financialHighlights", "keyRatios", "segmentPerformance"\n- For legal documents: include sections like "parties", "terms", "obligations", "termination"\n- For research reports: include sections like "methodology", "findings", "recommendations"\n\nAdapt the structure to best represent the content of this specific ${documentType}.\n\nHere is the document text:\n${documentText.substring(0, 15000)}`;
+      const promt = `Analyze the following ${documentType} and provide a comprehensive summary in Markdown format.
+  
+  Structure the summary with:
+  
+  - A bolded **Overview** section at the top.
+  - Use ## for section headers.
+  - Use ### for subsections, if needed.
+  - Use bullet points or numbered lists for items.
+  - Format nested or complex data (if any) as Markdown code blocks or nested lists.
+  
+  Adapt the structure to best represent the content of this specific ${documentType}.
+  
+  Here is the document text:
+  
+  ${documentText.substring(0, 15000)}
+  `;
 
       const messages = [
         {
           role: 'system' as const,
           content:
-            'You are a document analysis AI that provides detailed, accurate summaries of documents. Always respond with valid JSON only, without any markdown formatting or additional text.',
+            'You are a document analysis AI that provides detailed, accurate summaries of documents in Markdown format. Include headings, bullet points, and code blocks where necessary. Avoid using HTML or JSON formatting unless part of the document content.',
         },
         {
           role: 'user' as const,
-          content: `${promt}`,
+          content: promt,
         },
       ];
 
@@ -246,17 +259,13 @@ Make sure the data is based on the most recent developments as of today. Avoid o
         throw new Error('No content received from Perplexity API');
       }
 
-      const cleanedContent = this.cleanJsonResponse(content);
-      const parsedContent = JSON.parse(cleanedContent);
       return {
-        overview: parsedContent.overview || 'No overview available',
-        sections: parsedContent.sections || {},
+        markdown: content.trim(),
       };
     } catch (error) {
-      logger.error('Error getting dynamic summary:', error);
+      logger.error('Error getting markdown summary:', error);
       return {
-        overview: 'Error generating document summary',
-        sections: {},
+        markdown: 'Error generating document summary.',
       };
     }
   }
@@ -266,30 +275,31 @@ Make sure the data is based on the most recent developments as of today. Avoid o
 
     return {
       documentType: 'Annual Report',
-      overview: `Document analysis based on sample: ${sampleText}`,
-      sections: {
-        keyThemes: [
-          'Financial performance metrics',
-          'Market expansion strategy',
-          'Risk management approach',
-          'Technology investments',
-        ],
-        financialHighlights: {
-          revenue: '₹1,250 Cr (+25% YoY)',
-          ebitda: '₹280 Cr (+18% YoY)',
-          netProfit: '₹175 Cr (+15% YoY)',
-          cashFlow: '₹210 Cr (+20% YoY)',
-        },
-        risks: [
-          'Regulatory changes in fintech sector',
-          'Cybersecurity threats',
-          'Market competition',
-          'Currency fluctuations',
-        ],
-        tone: 'The document presents information in a professional and balanced manner, highlighting both opportunities and challenges.',
-        forwardLooking:
-          'The document indicates plans for expansion into new markets, investment in digital technologies, and development of new product offerings.',
-      },
+      dynamicSummary: `This is a mock summary for the document type 'Annual Report'. The content is based on the sample text provided: ${sampleText}`,
+      // overview: `Document analysis based on sample: ${sampleText}`,
+      // sections: {
+      //   keyThemes: [
+      //     'Financial performance metrics',
+      //     'Market expansion strategy',
+      //     'Risk management approach',
+      //     'Technology investments',
+      //   ],
+      //   financialHighlights: {
+      //     revenue: '₹1,250 Cr (+25% YoY)',
+      //     ebitda: '₹280 Cr (+18% YoY)',
+      //     netProfit: '₹175 Cr (+15% YoY)',
+      //     cashFlow: '₹210 Cr (+20% YoY)',
+      //   },
+      //   risks: [
+      //     'Regulatory changes in fintech sector',
+      //     'Cybersecurity threats',
+      //     'Market competition',
+      //     'Currency fluctuations',
+      //   ],
+      //   tone: 'The document presents information in a professional and balanced manner, highlighting both opportunities and challenges.',
+      //   forwardLooking:
+      //     'The document indicates plans for expansion into new markets, investment in digital technologies, and development of new product offerings.',
+      // },
     };
   }
 
