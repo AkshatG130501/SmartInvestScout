@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ArrowRight, Lock, Shield } from "lucide-react";
+import { Check, ArrowRight, Lock, Shield, AlertCircle, CheckCircle } from "lucide-react";
+import { subscribeToPricingNotifications } from "../lib/api/notifications";
 import Header from "../components/Header";
 
 const Pricing: React.FC = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationStatus, setNotificationStatus] = useState<"success" | "error" | null>(null);
 
   // Animation variants
   const containerVariants = {
@@ -80,23 +83,42 @@ const Pricing: React.FC = () => {
     { name: "Team Members", basic: "1", pro: "3", enterprise: "Unlimited" },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !email.includes("@")) return;
 
     setIsSubmitting(true);
+    setNotificationMessage("");
+    setNotificationStatus(null);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      setEmail("");
+    try {
+      // Call the actual API to subscribe to pricing notifications
+      const response = await subscribeToPricingNotifications(email);
       
-      // Reset submitted state after 3 seconds
-      setTimeout(() => {
-        setIsSubmitted(false);
-      }, 3000);
-    }, 1000);
+      setIsSubmitting(false);
+      setIsSubmitted(response.success);
+      
+      if (response.success) {
+        setNotificationStatus("success");
+        setNotificationMessage(response.message);
+        setEmail("");
+        
+        // Reset submitted state after 5 seconds
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setNotificationMessage("");
+          setNotificationStatus(null);
+        }, 5000);
+      } else {
+        setNotificationStatus("error");
+        setNotificationMessage(response.message || "Failed to subscribe. Please try again.");
+      }
+    } catch (error) {
+      setIsSubmitting(false);
+      setNotificationStatus("error");
+      setNotificationMessage("An unexpected error occurred. Please try again later.");
+      console.error("Error subscribing to pricing notifications:", error);
+    }
   };
 
   return (
@@ -310,6 +332,7 @@ const Pricing: React.FC = () => {
                   placeholder="Your email address"
                   className="flex-grow px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
                   required
+                  disabled={isSubmitting || isSubmitted}
                 />
                 <button
                   type="submit"
@@ -323,7 +346,10 @@ const Pricing: React.FC = () => {
                   {isSubmitting ? (
                     <span>Submitting...</span>
                   ) : isSubmitted ? (
-                    <span>Subscribed!</span>
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      <span>Subscribed!</span>
+                    </>
                   ) : (
                     <>
                       <span>Notify Me</span>
@@ -332,6 +358,20 @@ const Pricing: React.FC = () => {
                   )}
                 </button>
               </div>
+              
+              {/* Notification Message */}
+              {notificationMessage && (
+                <div className={`mt-4 p-3 rounded-lg flex items-start ${
+                  notificationStatus === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                }`}>
+                  {notificationStatus === "success" ? (
+                    <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                  )}
+                  <p className="text-sm">{notificationMessage}</p>
+                </div>
+              )}
             </form>
           </motion.div>
 
