@@ -41,7 +41,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
     if (user?.id) {
       fetchAlerts();
     }
-  }, [user]);
+  }, [user, filterCategory, limit]);
 
   const fetchAlerts = async () => {
     try {

@@ -82,25 +82,6 @@ alertsRouter.post('/preferences', async (req, res) => {
   }
 });
 
-// Get user alerts
-alertsRouter.get('/', async (req, res) => {
-  try {
-    const userId = req.query.userId as string;
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
-    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
-    
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
-    
-    const alerts = await getUserAlerts(userId, limit, offset);
-    return res.json({ alerts });
-  } catch (error) {
-    console.error('Error in get alerts endpoint:', error);
-    return res.status(500).json({ error: 'Failed to fetch alerts' });
-  }
-});
-
 // Mark alerts as read
 alertsRouter.post('/read', async (req, res) => {
   try {

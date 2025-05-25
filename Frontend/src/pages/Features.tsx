@@ -50,6 +50,7 @@ const Features: React.FC = () => {
       title: "Portfolio Insights with Context",
       description:
         "Connect your portfolio to Scout. Get personalized breakdowns, performance alerts, and actionable explanations — not just numbers.",
+      comingSoon: true,
     },
     {
       icon: <FileText className="h-10 w-10 text-indigo-600" />,
@@ -68,7 +69,6 @@ const Features: React.FC = () => {
       title: "Proactive Market Alerts",
       description:
         "Scout watches the market for you. Get notified when something relevant to your portfolio or interests happens — with context.",
-      comingSoon: true,
     },
     {
       icon: <Globe className="h-10 w-10 text-indigo-600" />,
@@ -112,20 +112,20 @@ const Features: React.FC = () => {
               <motion.div
                 key={index}
                 variants={itemVariants}
-                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 flex flex-col h-full"
+                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 flex flex-col h-full relative"
               >
+                {feature.comingSoon && (
+                  <span className="absolute top-2 right-2 px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
+                    Coming Soon
+                  </span>
+                )}
                 <div className="bg-indigo-50 rounded-lg p-4 inline-flex mb-5 self-start">
                   {feature.icon}
                 </div>
-                <div className="flex items-center mb-3">
+                <div className="mb-3">
                   <h3 className="text-xl font-semibold text-gray-900">
                     {feature.title}
                   </h3>
-                  {feature.comingSoon && (
-                    <span className="ml-2 px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
-                      Coming Soon
-                    </span>
-                  )}
                 </div>
                 <p className="text-gray-600 flex-grow">{feature.description}</p>
               </motion.div>

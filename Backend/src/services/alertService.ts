@@ -257,6 +257,10 @@ export async function getUserAlerts(
   offset: number = 0
 ): Promise<UserAlert[]> {
   try {
+    // First, check if we need to clean up any duplicate alerts
+    await removeDuplicateAlerts(userId);
+    
+    // Now fetch the alerts
     const { data, error } = await supabase
       .from('user_alerts')
       .select('*')
@@ -286,28 +290,31 @@ export async function getUserAlerts(
     }
 
     // If no alerts found, try to process market events to generate some
-    await runManualProcessing();
-    
-    // Check again after processing
-    const { data: newData, error: newError } = await supabase
-      .from('user_alerts')
-      .select('*')
-      .eq('user_id', userId)
-      .order('timestamp', { ascending: false })
-      .range(0, limit - 1);
+    // but don't do this if we're not on the first page
+    if (offset === 0) {
+      await runManualProcessing();
       
-    if (!newError && newData && newData.length > 0) {
-      return newData.map(item => ({
-        id: item.id,
-        userId: item.user_id,
-        title: item.title,
-        description: item.description,
-        category: item.category,
-        relatedTo: item.related_to || [],
-        timestamp: item.timestamp,
-        isRead: item.is_read,
-        eventId: item.event_id
-      }));
+      // Check again after processing
+      const { data: newData, error: newError } = await supabase
+        .from('user_alerts')
+        .select('*')
+        .eq('user_id', userId)
+        .order('timestamp', { ascending: false })
+        .range(0, limit - 1);
+        
+      if (!newError && newData && newData.length > 0) {
+        return newData.map(item => ({
+          id: item.id,
+          userId: item.user_id,
+          title: item.title,
+          description: item.description,
+          category: item.category,
+          relatedTo: item.related_to || [],
+          timestamp: item.timestamp,
+          isRead: item.is_read,
+          eventId: item.event_id
+        }));
+      }
     }
     
     // If still no alerts, return sample alerts
@@ -433,12 +440,9 @@ export async function countUnreadAlerts(userId: string): Promise<number> {
   try {
     const { count, error } = await supabase
       .from('user_alerts')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact' })
       .eq('user_id', userId)
       .eq('is_read', false);
-      
-    // Log the operation for debugging
-    console.log(`Counted unread alerts for user ${userId}: ${count || 0}`);
 
     if (error) {
       console.error('Error counting unread alerts:', error);
@@ -449,6 +453,78 @@ export async function countUnreadAlerts(userId: string): Promise<number> {
   } catch (error) {
     console.error('Error in countUnreadAlerts:', error);
     return 0;
+  }
+}
+
+/**
+ * Removes duplicate alerts for a user
+ * Duplicate alerts are defined as alerts with the same title, category, and description
+ * @param userId User ID
+ * @returns Success status
+ */
+export async function removeDuplicateAlerts(userId: string): Promise<boolean> {
+  try {
+    // First, get all alerts for the user
+    const { data, error } = await supabase
+      .from('user_alerts')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error || !data) {
+      console.error('Error fetching alerts for deduplication:', error);
+      return false;
+    }
+
+    // Group alerts by title + category + description to find duplicates
+    const alertGroups = new Map<string, any[]>();
+    
+    data.forEach(alert => {
+      // Create a unique key for each alert based on content
+      const key = `${alert.title}|${alert.category}|${alert.description}`;
+      
+      if (!alertGroups.has(key)) {
+        alertGroups.set(key, []);
+      }
+      
+      alertGroups.get(key)?.push(alert);
+    });
+
+    // For each group with more than one alert, keep the most recent one and delete the rest
+    const alertsToDelete: string[] = [];
+    
+    alertGroups.forEach(group => {
+      if (group.length > 1) {
+        // Sort by timestamp descending (newest first)
+        group.sort((a, b) => {
+          return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        });
+        
+        // Keep the first one (newest) and mark the rest for deletion
+        for (let i = 1; i < group.length; i++) {
+          alertsToDelete.push(group[i].id);
+        }
+      }
+    });
+
+    // Delete the duplicate alerts if any were found
+    if (alertsToDelete.length > 0) {
+      console.log(`Removing ${alertsToDelete.length} duplicate alerts for user ${userId}`);
+      
+      const { error: deleteError } = await supabase
+        .from('user_alerts')
+        .delete()
+        .in('id', alertsToDelete);
+
+      if (deleteError) {
+        console.error('Error deleting duplicate alerts:', deleteError);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in removeDuplicateAlerts:', error);
+    return false;
   }
 }
 

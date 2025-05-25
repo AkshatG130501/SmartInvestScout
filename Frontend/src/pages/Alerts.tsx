@@ -101,6 +101,7 @@ const Alerts: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
                 <AlertFeed 
+                  key={refreshKey} 
                   limit={50} 
                   showHeader={false} 
                   filterCategory={activeFilter !== 'All' ? activeFilter : undefined} 
