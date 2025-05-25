@@ -90,6 +90,22 @@ const Header: React.FC = () => {
             >
               Pricing
             </Link>
+            {user && (
+              <Link
+                to="/alerts"
+                className={`font-medium transition-colors duration-300 flex items-center ${
+                  isScrolled
+                    ? 'text-gray-600 hover:text-indigo-700'
+                    : 'text-gray-700 hover:text-indigo-600'
+                }`}
+              >
+                <span>Alerts</span>
+                <span className="ml-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-indigo-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                </span>
+              </Link>
+            )}
             {user ? (
               <div className="flex items-center space-x-4">
                 <UserMenu />
