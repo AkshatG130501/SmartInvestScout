@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
 import {
   ArrowLeft,
   Send,
@@ -19,9 +20,10 @@ import { createConversation, addMessageToConversation, getActiveConversation } f
 import { Conversation, ConversationMessage } from "../lib/api/types";
 import ReactMarkdown from "react-markdown";
 
+// Message type definition
 interface Message {
   id: string;
-  type: "user" | "ai";
+  type: "user" | "ai" | "system";
   content: string;
   timestamp: Date;
   personalizationContext?: {
@@ -32,56 +34,36 @@ interface Message {
   } | null;
 }
 
-// Convert ConversationMessage to Message format
-function conversationMessageToMessage(message: ConversationMessage): Message {
-  return {
-    id: new Date(message.timestamp).getTime().toString(),
-    type: message.role === 'user' ? 'user' : 'ai',
-    content: message.content,
-    timestamp: new Date(message.timestamp),
-    personalizationContext: message.personalization_context || null
-  };
-}
-
-// Convert Conversation to Message[] format
-function conversationToMessages(conversation: Conversation): Message[] {
-  if (!conversation || !conversation.messages || conversation.messages.length === 0) {
-    return [];
-  }
-  return conversation.messages.map(conversationMessageToMessage);
-}
-
+// Suggested prompts for empty chat
 const suggestedPrompts = [
-  "What's driving Apple's Q2 rally?",
-  "Is Microsoft's cloud growth sustainable?",
-  "Explain the impact of rising interest rates on tech stocks",
-  "What are the key risks for Tesla in 2024?",
+  "What stocks should I consider for a long-term investment?",
+  "How do I build a diversified portfolio?",
+  "Explain the difference between growth and value investing",
+  "What are the best ETFs for passive income?",
 ];
 
 const Chat: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { profile } = useProfile();
-  const [messages, setMessages] = useState<Message[]>([]);
-  // Message end ref for scrolling
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // State
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [showContextInfo, setShowContextInfo] = useState<number | null>(null);
   const [showConversationSidebar, setShowConversationSidebar] = useState(false);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
-  const navigate = useNavigate();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Scroll to bottom when messages change
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-
-
+  // Set page title
   useEffect(() => {
     document.title = "Ask Anything - SmartInvest Scout";
   }, []);
@@ -91,183 +73,264 @@ const Chat: React.FC = () => {
     setShowProfilePrompt(!!user && !profile);
   }, [user, profile]);
 
-  // Initialize conversation when component mounts
+  // Use a ref to track if we've already loaded the active conversation
+  const hasLoadedActiveConversation = useRef(false);
+
+  // Load active conversation on mount, but only if we're not coming from "Ask about this"
   useEffect(() => {
-    // If user is logged in but no active conversation, check if there's an active one to load
+    // Skip if we've already loaded the conversation or if we're coming from "Ask about this"
+    if (hasLoadedActiveConversation.current || (location.state?.initialQuestion && location.state?.context)) {
+      return;
+    }
+    
     const loadActiveConversation = async () => {
-      if (user && !activeConversation && messages.length === 0) {
+      if (user) {
         try {
-          // Try to get the active conversation for this user
           const conversation = await getActiveConversation(user.id);
-          
           if (conversation) {
-            // If there's an active conversation, load it
             setActiveConversation(conversation);
-            setMessages(conversationToMessages(conversation));
-            console.log('Loaded active conversation:', conversation.id);
-          } else {
-            // No active conversation, ready for a new one
-            console.log('Ready for a new conversation');
+            
+            // Format messages from conversation
+            const formattedMessages: Message[] = conversation.messages.map((msg: ConversationMessage) => ({
+              id: uuidv4(), // Generate a new ID since ConversationMessage doesn't have one
+              type: msg.role === "user" ? "user" : "ai",
+              content: msg.content,
+              timestamp: new Date(msg.timestamp || new Date()),
+              personalizationContext: msg.personalization_context || null
+            }));
+            
+            setMessages(formattedMessages);
+            
+            // Mark that we've loaded the active conversation
+            hasLoadedActiveConversation.current = true;
           }
         } catch (error) {
-          console.error('Error loading active conversation:', error);
+          console.error("Error loading active conversation:", error);
         }
       }
     };
-    
+
     loadActiveConversation();
-  }, [user, activeConversation, messages]);
+  }, [user, location.state]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: "user",
-      content: input,
-      timestamp: new Date(),
-    };
 
-    // Add the user message to the UI immediately
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsTyping(true);
-
-    try {
-      if (user) {
-        // Get personalized response from backend
-        const response = await getPersonalizedChatResponse(
-          user.id,
-          input.trim(),
-          activeConversation?.id // Pass the conversation ID if we have one
-        );
-
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: "ai",
-          content: response.content,
+  // Handle initial question with context from SearchResults page
+  useEffect(() => {
+    // Check if we have an initial question and context from location state
+    if (location.state?.initialQuestion && location.state?.context) {
+      const { initialQuestion, context } = location.state;
+      
+      const handleInitialNavigation = async () => {
+        // Always start a new chat when coming from "Ask about this"
+        // Clear any existing conversation and messages
+        setActiveConversation(null);
+        setMessages([]);
+        
+        // Add a system message indicating we're continuing from insights
+        const systemMessage: Message = {
+          id: uuidv4(),
+          type: "system",
+          content: `You're now chatting about ${context.company}. I have information about its recent performance and market trends.`,
           timestamp: new Date(),
-          personalizationContext: response.personalizationContext,
         };
+        
+        // Add the user's question to the chat
+        const userMessage: Message = {
+          id: uuidv4(),
+          type: "user",
+          content: initialQuestion,
+          timestamp: new Date(),
+        };
+        
+        setMessages([systemMessage, userMessage]);
+        
+        // Always create a new conversation for "Ask about this"
+        handleInitialQuestion(initialQuestion, context);
+      };
+      
+      handleInitialNavigation();
+      
+      // Clear location state to prevent duplicate handling on re-renders
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, user]);
 
-        // Add the AI response to the UI
-        setMessages((prev) => [...prev, aiMessage]);
+  // Handle initial question with context
+  const handleInitialQuestion = async (question: string, context: any, conversationId?: string) => {
+    if (!user) return;
+    
+    setIsTyping(true);
+    
+    try {
+      // Format context into a structured string
+      const contextString = 
+        `Context about ${context.company}:\n` +
+        `Company: ${context.company}\n` +
+        `Market Summary: ${context.market_summary.summary}\n` +
+        `Key Drivers: ${context.market_summary.key_drivers}\n` +
+        `Market Reaction: ${context.market_summary.market_reaction}`;
+      
+      // Get personalized response from backend
+      // The backend will extract the context and question
+      const questionWithContext = `${contextString}\n\nQuestion: ${question}`;
+      const response = await getPersonalizedChatResponse(
+        user.id,
+        questionWithContext,
+        conversationId // Use existing conversation ID if provided
+      );
 
-        // Save the conversation
-        try {
-          if (activeConversation) {
-            // Add to existing conversation
-            const updatedConversation = await addMessageToConversation(
-              activeConversation.id,
-              input.trim(),
-              response.content,
-              response.personalizationContext
-            );
-            setActiveConversation(updatedConversation);
-          } else {
-            // Create a new conversation
-            const newConversation = await createConversation(
-              user.id,
-              input.trim(),
-              response.content,
-              response.personalizationContext
-            );
-            setActiveConversation(newConversation);
-          }
-        } catch (saveError) {
-          console.error("Error saving conversation:", saveError);
+      const aiMessage: Message = {
+        id: uuidv4(),
+        type: "ai",
+        content: response.content,
+        timestamp: new Date(),
+        personalizationContext: response.personalizationContext,
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+      setIsTyping(false);
+
+      // Create or update conversation with context
+      try {
+        // Store the context in the personalization context object
+        const personalizationContextWithData = {
+          ...response.personalizationContext,
+          insightsContext: contextString
+        };
+        
+        if (conversationId) {
+          // Add to existing conversation
+          await addMessageToConversation(
+            conversationId,
+            question,
+            response.content,
+            personalizationContextWithData
+          );
+          // We don't need to update activeConversation as it's already set
+        } else {
+          // Create a new conversation
+          const newConversation = await createConversation(
+            user.id,
+            question,
+            response.content,
+            personalizationContextWithData
+          );
+          setActiveConversation(newConversation);
         }
-      } else {
-        // Fallback for non-logged in users
-        setTimeout(() => {
-          const aiMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            type: "ai",
-            content:
-              "For personalized investment insights tailored to your risk profile and interests, please sign in and set up your profile.",
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, aiMessage]);
-        }, 1500);
+      } catch (saveError) {
+        console.error("Error saving conversation:", saveError);
       }
     } catch (error) {
-      console.error("Error getting chat response:", error);
+      console.error("Error getting response:", error);
+      setIsTyping(false);
+      
+      // Show error message
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        content:
-          "Sorry, I encountered an error while processing your request. Please try again later.",
+        id: uuidv4(),
+        type: "system",
+        content: "Sorry, there was an error processing your request. Please try again.",
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
+      
+      setMessages(prev => [...prev, errorMessage]);
     }
   };
 
-  // Handle starting a new chat
-  const handleNewChat = async () => {
-    // Clear the active conversation in the UI
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!input.trim() || isTyping || !user) return;
+    
+    const question = input.trim();
+    setInput("");
+    
+    // Add user message to chat
+    const userMessage: Message = {
+      id: uuidv4(),
+      type: "user",
+      content: question,
+      timestamp: new Date(),
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
+    
+    try {
+      // Get personalized response from backend
+      const response = await getPersonalizedChatResponse(
+        user.id,
+        question,
+        activeConversation?.id
+      );
+
+      const aiMessage: Message = {
+        id: uuidv4(),
+        type: "ai",
+        content: response.content,
+        timestamp: new Date(),
+        personalizationContext: response.personalizationContext,
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+      setIsTyping(false);
+
+      // Save the message to the conversation
+      try {
+        if (activeConversation) {
+          // Add to existing conversation
+          await addMessageToConversation(
+            activeConversation.id,
+            question,
+            response.content,
+            response.personalizationContext
+          );
+        } else {
+          // Create a new conversation
+          const newConversation = await createConversation(
+            user.id,
+            question,
+            response.content,
+            response.personalizationContext
+          );
+          setActiveConversation(newConversation);
+        }
+      } catch (saveError) {
+        console.error("Error saving conversation:", saveError);
+      }
+    } catch (error) {
+      console.error("Error getting response:", error);
+      setIsTyping(false);
+      
+      // Show error message
+      const errorMessage: Message = {
+        id: uuidv4(),
+        type: "system",
+        content: "Sorry, there was an error processing your request. Please try again.",
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  // Start a new chat
+  const handleNewChat = () => {
     setActiveConversation(null);
     setMessages([]);
-    setShowConversationSidebar(false);
-    
-    // If the user is logged in, we should also deactivate any active conversation in the database
-    if (user) {
-      try {
-        // Call a new endpoint to deactivate all active conversations
-        await fetch(`/api/conversations/user/${user.id}/deactivate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-      } catch (error) {
-        console.error('Error deactivating conversations:', error);
-      }
+    // Close the sidebar if it's open
+    if (showConversationSidebar) {
+      setShowConversationSidebar(false);
     }
   };
 
-  // Handle selecting a conversation from the sidebar
-  const handleSelectConversation = async (conversation: Conversation) => {
-    // First, clear any existing messages to prevent duplicates
-    setMessages([]);
-    
-    // Set the active conversation
-    setActiveConversation(conversation);
-    
-    // Convert conversation messages to our UI format
-    const formattedMessages = conversationToMessages(conversation);
-    setMessages(formattedMessages);
-    
-    // Close the sidebar on mobile
-    setShowConversationSidebar(false);
-    
-    // If the user is logged in, mark this conversation as active
-    if (user) {
-      try {
-        // First deactivate all conversations
-        await fetch(`/api/conversations/user/${user.id}/deactivate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        // Then update this conversation to be active
-        await fetch(`/api/conversations/${conversation.id}/activate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-      } catch (error) {
-        console.error('Error updating conversation active status:', error);
-      }
-    }
+  // Format context item for display
+  const formatContextItem = (item: string) => {
+    return item.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
+  // Toggle context info display
   const toggleContextInfo = (index: number) => {
     if (showContextInfo === index) {
       setShowContextInfo(null);
@@ -276,107 +339,119 @@ const Chat: React.FC = () => {
     }
   };
 
-  const formatContextItem = (item: string) => {
-    return item.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-  };
-
+  // Message bubble component
   const MessageBubble: React.FC<{ message: Message; index: number }> = ({
     message,
     index,
-  }) => (
-    <div
-      className={`flex items-start space-x-3 ${
-        message.type === "ai" ? "bg-white" : "bg-indigo-50"
-      } rounded-lg p-4 mb-4`}
-    >
+  }) => {
+    // Special handling for system messages
+    if (message.type === "system") {
+      return (
+        <div className="flex justify-center mb-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 max-w-[90%] flex items-start">
+            <Info className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5" />
+            <div className="text-blue-700 text-sm">{message.content}</div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Regular user and AI messages
+    return (
       <div
-        className={`p-2 rounded-lg ${
-          message.type === "ai" ? "bg-indigo-100" : "bg-indigo-200"
-        }`}
+        className={`flex items-start space-x-3 ${
+          message.type === "ai" ? "bg-white" : "bg-indigo-50"
+        } rounded-lg p-4 mb-4`}
       >
-        {message.type === "ai" ? (
-          <Bot className="h-5 w-5 text-indigo-600" />
-        ) : (
-          <User className="h-5 w-5 text-indigo-700" />
-        )}
-      </div>
-      <div className="flex-1">
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center">
-            <span className="font-medium text-gray-900">
-              {message.type === "ai" ? "SmartInvest Scout" : "You"}
-            </span>
-            {message.type === "ai" && message.personalizationContext && (
-              <button
-                onClick={() => toggleContextInfo(index)}
-                className="ml-2 text-xs text-indigo-600 hover:text-indigo-800 flex items-center"
-              >
-                <Info className="h-3 w-3 mr-1" />
-                <span>Personalized for you</span>
-              </button>
-            )}
-          </div>
-          <span className="text-sm text-gray-500">
-            {message.timestamp.toLocaleTimeString()}
-          </span>
+        <div
+          className={`p-2 rounded-lg ${
+            message.type === "ai" ? "bg-indigo-100" : "bg-indigo-200"
+          }`}
+        >
+          {message.type === "ai" ? (
+            <Bot className="h-5 w-5 text-indigo-600" />
+          ) : (
+            <User className="h-5 w-5 text-indigo-700" />
+          )}
         </div>
-
-        {showContextInfo === index && message.personalizationContext && (
-          <div className="mb-3 p-2 bg-indigo-50 rounded-md text-sm">
-            <div className="flex justify-between items-center mb-1">
-              <span className="font-medium text-indigo-800">
-                Answer based on your profile:
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center">
+              <span className="font-medium text-gray-900">
+                {message.type === "ai" ? "SmartInvest Scout" : "You"}
               </span>
-              <button
-                onClick={() => setShowContextInfo(null)}
-                className="text-indigo-600 hover:text-indigo-800"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              {message.type === "ai" && message.personalizationContext && (
+                <button
+                  onClick={() => toggleContextInfo(index)}
+                  className="ml-2 text-xs text-indigo-600 hover:text-indigo-800 flex items-center"
+                >
+                  <Info className="h-3 w-3 mr-1" />
+                  <span>Personalized for you</span>
+                </button>
+              )}
             </div>
-            <ul className="text-indigo-700 text-xs space-y-1">
-              <li>
-                Risk appetite:{" "}
-                <span className="font-medium capitalize">
-                  {message.personalizationContext.riskAppetite}
-                </span>
-              </li>
-              {message.personalizationContext.investmentGoals.length > 0 && (
-                <li>
-                  Goals:{" "}
-                  <span className="font-medium">
-                    {message.personalizationContext.investmentGoals
-                      .map(formatContextItem)
-                      .join(", ")}
-                  </span>
-                </li>
-              )}
-              {message.personalizationContext.watchlist.length > 0 && (
-                <li>
-                  Watchlist:{" "}
-                  <span className="font-medium">
-                    {message.personalizationContext.watchlist.join(", ")}
-                  </span>
-                </li>
-              )}
-              {message.personalizationContext.holdings.length > 0 && (
-                <li>
-                  Holdings:{" "}
-                  <span className="font-medium">
-                    {message.personalizationContext.holdings.join(", ")}
-                  </span>
-                </li>
-              )}
-            </ul>
+            <span className="text-sm text-gray-500">
+              {message.timestamp.toLocaleTimeString()}
+            </span>
           </div>
-        )}
 
-        <div className="prose prose-indigo text-gray-700">
-          <ReactMarkdown>{message.content}</ReactMarkdown>
+          {showContextInfo === index && message.personalizationContext && (
+            <div className="mb-3 p-2 bg-indigo-50 rounded-md text-sm">
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-medium text-indigo-800">
+                  Answer based on your profile:
+                </span>
+                <button
+                  onClick={() => setShowContextInfo(null)}
+                  className="text-indigo-600 hover:text-indigo-800"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <ul className="text-indigo-700 text-xs space-y-1">
+                <li>
+                  Risk appetite:{" "}
+                  <span className="font-medium capitalize">
+                    {message.personalizationContext.riskAppetite}
+                  </span>
+                </li>
+                {message.personalizationContext.investmentGoals.length > 0 && (
+                  <li>
+                    Goals:{" "}
+                    <span className="font-medium">
+                      {message.personalizationContext.investmentGoals
+                        .map(formatContextItem)
+                        .join(", ")}
+                    </span>
+                  </li>
+                )}
+                {message.personalizationContext.watchlist.length > 0 && (
+                  <li>
+                    Watchlist:{" "}
+                    <span className="font-medium">
+                      {message.personalizationContext.watchlist.join(", ")}
+                    </span>
+                  </li>
+                )}
+                {message.personalizationContext.holdings.length > 0 && (
+                  <li>
+                    Holdings:{" "}
+                    <span className="font-medium">
+                      {message.personalizationContext.holdings.join(", ")}
+                    </span>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          <div className="prose prose-indigo text-gray-700">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -490,29 +565,58 @@ const Chat: React.FC = () => {
               disabled={!input.trim() || isTyping}
               className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2
                 ${
-                  input.trim() && !isTyping
-                    ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  !input.trim() || isTyping
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-indigo-600 text-white hover:bg-indigo-700"
                 }`}
             >
+              <Send className="h-5 w-5" />
               <span>Send</span>
-              <Send className="h-4 w-4" />
             </button>
           </form>
         </div>
       </div>
 
       {/* Conversation Sidebar */}
-      {user && (
-        <ConversationSidebar
-          userId={user.id}
-          isOpen={showConversationSidebar}
-          onClose={() => setShowConversationSidebar(false)}
-          onSelectConversation={handleSelectConversation}
-          onNewChat={handleNewChat}
-          activeConversationId={activeConversation?.id}
-        />
-      )}
+      <ConversationSidebar
+        userId={user?.id || ""}
+        isOpen={showConversationSidebar}
+        onClose={() => setShowConversationSidebar(false)}
+        onSelectConversation={(conversation) => {
+          try {
+            // Only load the conversation if it's different from the current one
+            if (activeConversation?.id !== conversation.id) {
+              // Clear messages first to prevent duplicates
+              setMessages([]);
+              
+              // Ensure conversation has messages before trying to map them
+              if (conversation.messages && Array.isArray(conversation.messages)) {
+                // Format messages from the selected conversation
+                const formattedMessages: Message[] = conversation.messages.map((msg) => ({
+                  id: uuidv4(),
+                  type: msg.role === "user" ? "user" : "ai",
+                  content: msg.content || "",
+                  timestamp: new Date(msg.timestamp || new Date()),
+                  personalizationContext: msg.personalization_context || null
+                }));
+                
+                // Set the active conversation and messages
+                setActiveConversation(conversation);
+                setMessages(formattedMessages);
+              } else {
+                console.error("Selected conversation has no messages or invalid message format");
+                // Set active conversation but with empty messages
+                setActiveConversation(conversation);
+              }
+            }
+          } catch (error) {
+            console.error("Error selecting conversation:", error);
+          }
+          setShowConversationSidebar(false);
+        }}
+        onNewChat={handleNewChat}
+        activeConversationId={activeConversation?.id}
+      />
     </div>
   );
 };

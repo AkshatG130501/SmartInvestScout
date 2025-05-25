@@ -106,7 +106,18 @@ const SearchResults: React.FC = () => {
             icon="external-link"
             primary
             onClick={() => {
-              /* TODO: Implement chat functionality */
+              // Navigate to chat page with context and initial question
+              // Format a more specific question based on the insights
+              const specificQuestion = insights?.market_summary?.key_drivers
+                ? `Tell me more about ${insights?.company} and how ${insights?.market_summary?.key_drivers} is affecting its performance`
+                : `Tell me more about ${insights?.company}`;
+                
+              navigate('/chat', {
+                state: {
+                  initialQuestion: specificQuestion,
+                  context: insights
+                }
+              });
             }}
           />
         </div>

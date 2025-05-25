@@ -131,7 +131,35 @@ export class PersonalizedChatService {
     }
   }
 
+  /**
+   * Extract insights context from a query if it exists
+   * This handles the case where the frontend prepends insights context to the query
+   */
+  private extractInsightsContext(query: string): { extractedQuery: string; insightsContext: string | null } {
+    // Check if the query contains the insights context marker
+    const contextMarker = 'Context about ';
+    const questionMarker = '\n\nQuestion: ';
+    
+    if (query.includes(contextMarker) && query.includes(questionMarker)) {
+      const contextStartIndex = query.indexOf(contextMarker);
+      const questionStartIndex = query.indexOf(questionMarker);
+      
+      if (contextStartIndex >= 0 && questionStartIndex > contextStartIndex) {
+        const insightsContext = query.substring(contextStartIndex, questionStartIndex);
+        const extractedQuery = query.substring(questionStartIndex + questionMarker.length);
+        
+        return { extractedQuery, insightsContext };
+      }
+    }
+    
+    // If no context markers found, return the original query
+    return { extractedQuery: query, insightsContext: null };
+  }
+
   private constructPersonalizedPrompt(profile: UserProfile, query: string): string {
+    // Extract insights context if present
+    const { extractedQuery, insightsContext } = this.extractInsightsContext(query);
+    
     const holdingsStr =
       profile.holdings.length > 0
         ? profile.holdings.map((h) => `- ${h.name} (${h.symbol})`).join('\n')
@@ -140,7 +168,8 @@ export class PersonalizedChatService {
     const goalsStr = profile.investment_goals.map((g) => `- ${g}`).join('\n');
     const watchlistStr = profile.watchlist.map((w) => `- ${w}`).join('\n');
 
-    return `## User Financial Profile
+    // Build the prompt with insights context if available
+    let prompt = `## User Financial Profile
   
   **Risk Appetite:** ${profile.risk_appetite}
   
@@ -152,21 +181,34 @@ export class PersonalizedChatService {
   
   **Holdings:**
   ${holdingsStr}
+  `;
   
+    // Add insights context if available
+    if (insightsContext) {
+      prompt += `
+  ## Insights Context
+  ${insightsContext}
+  `;
+    }
+    
+    prompt += `
   ---
   
   ### User's Question
-  > ${query}
+  > ${extractedQuery}
   
   ---
   
   ### Instructions for the Assistant
   - Tailor the answer to their **risk level** and **investment goals**.
   - If the query mentions stocks or sectors in their **watchlist** or **holdings**, highlight those.
+  - If insights context is provided, use it to provide more relevant and specific information.
   - If the query is about **investment strategies**, align your advice accordingly.
   - Format the entire response in **Markdown**.
   - **Do not** include citations or numbered references like [1], [2], or [source].
   `;
+  
+    return prompt;
   }
 
   /**

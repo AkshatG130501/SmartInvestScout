@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   X,
   ChevronRight,
@@ -37,6 +37,24 @@ const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
     Conversation[]
   >([]);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  
+  // Helper function to deduplicate conversations by ID
+  const deduplicateConversations = useCallback((convs: Conversation[]): Conversation[] => {
+    // Log the conversations to help debug duplicates
+    if (convs.length > 0) {
+      const ids = convs.map(conv => conv.id);
+      const uniqueIds = new Set(ids);
+      
+      if (ids.length !== uniqueIds.size) {
+        console.log(`Detected ${ids.length - uniqueIds.size} duplicate conversation(s)`);
+      }
+    }
+    
+    // Use a Map to ensure uniqueness by ID
+    const uniqueMap = new Map<string, Conversation>();
+    convs.forEach(conv => uniqueMap.set(conv.id, conv));
+    return Array.from(uniqueMap.values());
+  }, []);
 
   const fetchConversations = async (cursor?: string) => {
     if (!userId) return;
@@ -44,52 +62,88 @@ const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
     setIsLoading(true);
     try {
       const response = await getConversations(userId, 20, cursor);
+      
+      // Log the response to help debug
+      console.log(`Fetched ${response.conversations.length} conversations${cursor ? ' with cursor' : ''}`);
+      
+      // Check for duplicate IDs in the response
+      const responseIds = response.conversations.map(conv => conv.id);
+      const uniqueResponseIds = new Set(responseIds);
+      if (responseIds.length !== uniqueResponseIds.size) {
+        console.warn('API returned duplicate conversations');
+      }
 
       if (cursor) {
-        // Append to existing conversations
-        setConversations((prev) => [...prev, ...response.conversations]);
+        // Append to existing conversations, ensuring no duplicates
+        setConversations((prev) => {
+          // First deduplicate the new conversations from the response
+          const deduplicatedNewConversations = deduplicateConversations(response.conversations);
+          
+          // Then combine with previous conversations and deduplicate again
+          const combined = [...prev, ...deduplicatedNewConversations];
+          return deduplicateConversations(combined);
+        });
       } else {
-        // Replace conversations
-        setConversations(response.conversations);
+        // For initial load, just set the conversations directly after deduplication
+        setConversations(deduplicateConversations(response.conversations));
       }
 
       setHasMore(response.hasMore);
       setNextCursor(response.nextCursor);
     } catch (error) {
       console.error("Error fetching conversations:", error);
+      // Show empty conversations instead of crashing
+      if (!cursor) {
+        setConversations([]);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Filter conversations based on search term
+  // Filter and sort conversations based on search term
   useEffect(() => {
+    // Always use the deduplicated list
+    const uniqueConversations = deduplicateConversations(conversations);
+    
+    // Sort conversations by updated_at date (newest first)
+    const sortedConversations = [...uniqueConversations].sort((a, b) => {
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    });
+    
     if (!searchTerm.trim()) {
-      setFilteredConversations(conversations);
+      setFilteredConversations(sortedConversations);
       return;
     }
 
-    const filtered = conversations.filter((conversation) => {
+    const searchTermLower = searchTerm.trim().toLowerCase();
+    const filtered = sortedConversations.filter((conversation) => {
       // Search in title
-      if (conversation.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+      if (conversation.title?.toLowerCase().includes(searchTermLower)) {
         return true;
       }
 
       // Search in messages
       return conversation.messages.some((message) =>
-        message.content.toLowerCase().includes(searchTerm.toLowerCase())
+        message.content.toLowerCase().includes(searchTermLower)
       );
     });
 
     setFilteredConversations(filtered);
-  }, [searchTerm, conversations]);
+  }, [searchTerm, conversations, deduplicateConversations]);
 
   // Initial fetch
   useEffect(() => {
-    if (isOpen && userId) {
+    if (userId && isOpen) {
+      // Clear existing conversations first to prevent duplicates
+      setConversations([]);
+      setFilteredConversations([]);
+      setNextCursor(undefined);
+      setHasMore(false);
+      setSearchTerm(""); // Reset search term when opening sidebar
       fetchConversations();
     }
-  }, [isOpen, userId]);
+  }, [userId, isOpen]);
 
   const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the conversation selection
@@ -143,6 +197,9 @@ const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
     }
     // Get first few words of the first message
     const firstMessage = getFirstUserMessage(conversation);
+    if (!firstMessage) {
+      return "New conversation";
+    }
     const words = firstMessage.split(" ");
     const titleWords = words.slice(0, 5);
     return titleWords.join(" ") + (words.length > 5 ? "..." : "");
@@ -207,6 +264,7 @@ const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
               </div>
             ) : (
               <ul className="divide-y divide-gray-100">
+                {/* Add a key based on ID to ensure React properly handles updates */}
                 {filteredConversations.map((conversation) => (
                   <li
                     key={conversation.id}
