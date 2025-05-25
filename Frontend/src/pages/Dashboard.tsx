@@ -4,6 +4,7 @@ import { saveSearchQuery, getRecentSearches } from "../lib/api/search";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import SearchSuggestions from "../components/SearchSuggestions";
+import { useAuth } from "../contexts/AuthContext";
 import {
   MessageSquare,
   Upload,
@@ -13,6 +14,8 @@ import {
   DollarSign,
   Clock,
   ChevronRight,
+  BarChart,
+  Activity,
 } from "lucide-react";
 import Header from "../components/Header";
 import UploadModal from "../components/UploadModal";
@@ -38,11 +41,21 @@ const suggestedTopics = [
   },
 ];
 
+// Trending topics for logged-out users
+const trendingTopics = [
+  { id: "nifty50", label: "Nifty 50", icon: <BarChart className="w-4 h-4" />, count: 1245 },
+  { id: "ai-stocks", label: "AI Stocks", icon: <Activity className="w-4 h-4" />, count: 987 },
+  { id: "renewable", label: "Renewable Energy", icon: <Leaf className="w-4 h-4" />, count: 856 },
+  { id: "banking", label: "Banking Sector", icon: <DollarSign className="w-4 h-4" />, count: 742 },
+  { id: "tech-stocks", label: "Tech Stocks", icon: <TrendingUp className="w-4 h-4" />, count: 635 },
+];
+
 // Initial empty array for recent searches
 const initialRecentSearches: SearchHistoryItemDisplay[] = [];
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState<SearchHistoryItemDisplay[]>(initialRecentSearches);
   const [isLoadingSearches, setIsLoadingSearches] = useState(false);
@@ -50,27 +63,32 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     document.title = "Dashboard - SmartInvest Scout";
     
-    // Fetch recent searches when component mounts
-    const fetchRecentSearches = async () => {
-      setIsLoadingSearches(true);
-      try {
-        const searches = await getRecentSearches(5);
-        // Convert timestamp strings to Date objects for display
-        const formattedSearches = searches.map(search => ({
-          id: search.id,
-          query: search.query,
-          timestamp: new Date(search.timestamp)
-        }));
-        setRecentSearches(formattedSearches);
-      } catch (error) {
-        console.error('Error fetching recent searches:', error);
-      } finally {
-        setIsLoadingSearches(false);
-      }
-    };
-    
-    fetchRecentSearches();
-  }, []);
+    // Only fetch recent searches if user is logged in
+    if (user) {
+      const fetchRecentSearches = async () => {
+        setIsLoadingSearches(true);
+        try {
+          const searches = await getRecentSearches(5, user.id);
+          // Convert timestamp strings to Date objects for display
+          const formattedSearches = searches.map(search => ({
+            id: search.id,
+            query: search.query,
+            timestamp: new Date(search.timestamp)
+          }));
+          setRecentSearches(formattedSearches);
+        } catch (error) {
+          console.error('Error fetching recent searches:', error);
+        } finally {
+          setIsLoadingSearches(false);
+        }
+      };
+      
+      fetchRecentSearches();
+    } else {
+      // For logged-out users, we don't need to fetch anything
+      setIsLoadingSearches(false);
+    }
+  }, [user]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,8 +97,10 @@ const Dashboard: React.FC = () => {
   const handleSuggestionClick = (suggestion: string) => {
     // Extract just the symbol if it's in the format "SYMBOL - Company Name"
     const query = suggestion.includes(' - ') ? suggestion.split(' - ')[0] : suggestion;
-    // Save search query to history
-    saveSearchQuery(query);
+    // Save search query to history only if user is logged in
+    if (user) {
+      saveSearchQuery(query, user.id);
+    }
     navigate(`/search/${encodeURIComponent(query)}`);
   };
 
@@ -193,43 +213,75 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Recent Searches */}
+            {/* Recent Searches or Trending Topics */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Recent Searches
+                  {user ? "Recent Searches" : "Recent Trending"}
                 </h2>
-                <Clock className="h-5 w-5 text-gray-400" />
+                {user ? (
+                  <Clock className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <TrendingUp className="h-5 w-5 text-gray-400" />
+                )}
               </div>
               <div className="space-y-3">
-                {isLoadingSearches ? (
-                  <div className="text-center py-4 text-gray-500">Loading recent searches...</div>
-                ) : recentSearches.length > 0 ? (
-                  recentSearches.map((search) => (
+                {user ? (
+                  // Show recent searches for logged-in users
+                  isLoadingSearches ? (
+                    <div className="text-center py-4 text-gray-500">Loading recent searches...</div>
+                  ) : recentSearches.length > 0 ? (
+                    recentSearches.map((search) => (
+                      <motion.button
+                        key={search.id}
+                        whileHover={{ scale: 1.01 }}
+                        className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg group transition-colors duration-200"
+                        onClick={() => {
+                          if (user) {
+                            saveSearchQuery(search.query, user.id);
+                          }
+                          navigate(`/search/${encodeURIComponent(search.query)}`);
+                        }}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-gray-100 rounded-full p-2">
+                            <Clock className="h-4 w-4 text-gray-500" />
+                          </div>
+                          <span className="text-gray-700">{search.query}</span>
+                        </div>
+                        <span className="text-sm text-gray-400">
+                          {search.timestamp.toLocaleDateString()}
+                        </span>
+                      </motion.button>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No recent searches found. Try searching for something!
+                    </div>
+                  )
+                ) : (
+                  // Show trending topics for logged-out users
+                  trendingTopics.map((topic) => (
                     <motion.button
-                      key={search.id}
+                      key={topic.id}
                       whileHover={{ scale: 1.01 }}
                       className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg group transition-colors duration-200"
                       onClick={() => {
-                        saveSearchQuery(search.query);
-                        navigate(`/search/${encodeURIComponent(search.query)}`);
+                        navigate(`/search/${encodeURIComponent(topic.label)}`);
                       }}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="bg-gray-100 rounded-full p-2">
-                          <Clock className="h-4 w-4 text-gray-500" />
+                        <div className="bg-indigo-50 rounded-full p-2">
+                          {topic.icon}
                         </div>
-                        <span className="text-gray-700">{search.query}</span>
+                        <span className="text-gray-700">{topic.label}</span>
                       </div>
-                      <span className="text-sm text-gray-400">
-                        {search.timestamp.toLocaleDateString()}
-                      </span>
+                      <div className="flex items-center text-sm text-gray-400">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        <span>{topic.count.toLocaleString()}</span>
+                      </div>
                     </motion.button>
                   ))
-                ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    No recent searches found. Try searching for something!
-                  </div>
                 )}
               </div>
             </div>
