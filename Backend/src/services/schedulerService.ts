@@ -5,9 +5,9 @@ import { processMarketEvents } from './alertService';
  * Initializes the scheduler for market event processing
  */
 export function initializeScheduler(): void {
-  // Schedule market event processing to run every minute
-  // Cron format: second(0-59) minute(0-59) hour(0-23) day(1-31) month(1-12) day_of_week(0-6)
-  cron.schedule('0 0 * * * *', async () => {
+  // Schedule market event processing to run once per hour
+  // Cron format: minute(0-59) hour(0-23) day(1-31) month(1-12) day_of_week(0-6)
+  cron.schedule('0 * * * *', async () => {
     console.log('Running scheduled market event processing...');
     try {
       const alertsCreated = await processMarketEvents();

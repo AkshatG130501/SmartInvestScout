@@ -150,7 +150,7 @@ export async function querySonarForEvents(timeframe: number = 4): Promise<Market
     const response = await axios.post(
       `${SONAR_API_URL}/chat/completions`,
       {
-        model: 'sonar-pro',
+        model: 'mistral-7b-instruct',
         messages: [
           {
             role: 'system',
@@ -164,6 +164,7 @@ export async function querySonarForEvents(timeframe: number = 4): Promise<Market
         ],
         temperature: 0.1,
         max_tokens: 1024,
+        response_format: { type: 'json' },
       },
       {
         headers: {
@@ -190,15 +191,8 @@ export async function querySonarForEvents(timeframe: number = 4): Promise<Market
       console.log(`[ALERT_FLOW] 6. Response contains ${responseData.choices.length} choices`);
       // Parse the JSON content from the response
       try {
-        let content = responseData.choices[0].message.content;
+        const content = responseData.choices[0].message.content;
         console.log(`[ALERT_FLOW] 7. Raw content from API:`, content);
-        
-        // Remove markdown code blocks if present
-        if (content.includes('```json')) {
-          content = content.replace(/```json\n/g, '').replace(/```/g, '');
-          console.log(`[ALERT_FLOW] 7.1. Cleaned content:`, content);
-        }
-        
         const parsedContent = JSON.parse(content) as SonarResponse;
         console.log(`[ALERT_FLOW] 7.1. Parsed content:`, JSON.stringify(parsedContent, null, 2));
 
@@ -311,20 +305,20 @@ If no material events are found, return:
     const response = await axios.post(
       `${SONAR_API_URL}/chat/completions`,
       {
-        model: 'sonar-pro',
+        model: 'mistral-7b-instruct',
         messages: [
           {
             role: 'system',
-            content:
-              'You are a financial market intelligence system. Return responses in JSON format only.',
+            content: 'You are a financial market intelligence system. Return responses in JSON format only.'
           },
           {
             role: 'user',
-            content: prompt,
-          },
+            content: prompt
+          }
         ],
         temperature: 0.1,
         max_tokens: 1024,
+        response_format: { type: 'json' },
       },
       {
         headers: {
@@ -335,18 +329,12 @@ If no material events are found, return:
     );
 
     const responseData = response.data as PerplexityResponse;
-
+    
     // Perplexity API returns data in the choices array with content field
     if (responseData && responseData.choices && responseData.choices.length > 0) {
       // Parse the JSON content from the response
       try {
-        let content = responseData.choices[0].message.content;
-        
-        // Remove markdown code blocks if present
-        if (content.includes('```json')) {
-          content = content.replace(/```json\n/g, '').replace(/```/g, '');
-        }
-        
+        const content = responseData.choices[0].message.content;
         const parsedContent = JSON.parse(content) as SonarResponse;
 
         if (parsedContent && parsedContent.events && Array.isArray(parsedContent.events)) {
