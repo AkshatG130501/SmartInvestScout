@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Send, Bot, User, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Send,
+  Bot,
+  User,
+  Loader2
+} from "lucide-react";
 import Button from "../components/Button";
 import { getPersonalizedChatResponse } from "../lib/api/chat";
 import { useAuth } from "../contexts/AuthContext";
@@ -29,7 +36,8 @@ interface DocumentSummary {
 
 const defaultSummary: DocumentSummary = {
   documentType: "Unknown Document",
-  dynamicSummary: "No document summary available. Please upload a document first.",
+  dynamicSummary:
+    "No document summary available. Please upload a document first.",
 };
 
 const Summary: React.FC = () => {
@@ -42,6 +50,7 @@ const Summary: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showChat, setShowChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -58,7 +67,7 @@ const Summary: React.FC = () => {
         const parsedSummary = JSON.parse(storedSummary);
         setSummary({
           documentType: parsedSummary.documentType,
-          dynamicSummary: parsedSummary.dynamicSummary
+          dynamicSummary: parsedSummary.dynamicSummary,
         });
       } catch (error) {
         console.error("Error parsing document summary:", error);
@@ -70,8 +79,10 @@ const Summary: React.FC = () => {
   const handleCopyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(summary.dynamicSummary);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
     } catch (err) {
-      console.error("Failed to copy to clipboard:", err);
+      console.error("Failed to copy:", err);
     }
   };
 
@@ -139,7 +150,8 @@ const Summary: React.FC = () => {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "ai",
-        content: "Sorry, I encountered an error while processing your request. Please try again later.",
+        content:
+          "Sorry, I encountered an error while processing your request. Please try again later.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -167,10 +179,10 @@ const Summary: React.FC = () => {
               icon="external-link"
             />
             <Button
-              label="Copy Summary"
+              label={copied ? "Copied!" : "Copy Summary"}
               secondary
               onClick={handleCopyToClipboard}
-              icon="external-link"
+              icon={copied ? "check" : "external-link"}
             />
           </div>
         </div>

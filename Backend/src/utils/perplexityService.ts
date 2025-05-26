@@ -229,6 +229,7 @@ Make sure the data is based on the most recent developments as of today. Avoid o
   - Use ### for subsections, if needed.
   - Use bullet points or numbered lists for items.
   - Format nested or complex data (if any) as Markdown code blocks or nested lists.
+  - **Do not include any citations, references, or source attributions.**
   
   Adapt the structure to best represent the content of this specific ${documentType}.
   
