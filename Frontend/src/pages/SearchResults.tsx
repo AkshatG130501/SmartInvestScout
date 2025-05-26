@@ -67,6 +67,15 @@ const SearchResults: React.FC = () => {
     }
   };
 
+  const handleFollowUpQuestion = (question: string) => {
+    navigate("/chat", {
+      state: {
+        initialQuestion: question,
+        context: insights,
+      },
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
@@ -111,12 +120,12 @@ const SearchResults: React.FC = () => {
               const specificQuestion = insights?.market_summary?.key_drivers
                 ? `Tell me more about ${insights?.company} and how ${insights?.market_summary?.key_drivers} is affecting its performance`
                 : `Tell me more about ${insights?.company}`;
-                
-              navigate('/chat', {
+
+              navigate("/chat", {
                 state: {
                   initialQuestion: specificQuestion,
-                  context: insights
-                }
+                  context: insights,
+                },
               });
             }}
           />
@@ -255,8 +264,11 @@ const SearchResults: React.FC = () => {
               <div className="space-y-3">
                 {insights?.risk_factors ? (
                   Object.entries(insights.risk_factors).map(([key, value]) => (
-                    <div key={key} className="flex items-start space-x-3">
-                      <div className="w-2 h-2 rounded-full bg-amber-500 mt-2" />
+                    <div
+                      key={key}
+                      className="flex items-start space-x-3 justify-between"
+                    >
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
                       <div>
                         <h3 className="font-medium text-gray-900">
                           {key.charAt(0).toUpperCase() +
@@ -294,6 +306,7 @@ const SearchResults: React.FC = () => {
                   insights.follow_up_questions.map((question, i) => (
                     <button
                       key={i}
+                      onClick={() => handleFollowUpQuestion(question)}
                       className="w-full text-left p-3 rounded-lg bg-gray-50 hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition-colors duration-200"
                     >
                       {question}
