@@ -5,6 +5,7 @@ import { config } from 'dotenv';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
 import routes from './routes';
+import { initializeScheduler } from './services/schedulerService';
 
 // Load environment variables
 config();
@@ -26,4 +27,8 @@ app.use(errorHandler);
 // Start server
 app.listen(port, () => {
   logger.info(`Server is running on port ${port}`);
+  
+  // Initialize the scheduler for market event processing
+  initializeScheduler();
+  logger.info('Market event scheduler initialized');
 });

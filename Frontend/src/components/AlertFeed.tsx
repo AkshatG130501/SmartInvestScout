@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Bell, 
-  TrendingUp, 
-  AlertCircle, 
-  FileText, 
-  Briefcase, 
-  BarChart, 
-  Globe, 
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Bell,
+  TrendingUp,
+  AlertCircle,
+  FileText,
+  Briefcase,
+  BarChart,
+  Globe,
   MessageCircle,
   ChevronDown,
   ChevronUp,
-  Check
-} from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { getUserAlerts, markAlertsAsRead } from '../lib/api/alerts';
-import { UserAlert } from '../lib/types/alerts';
-import { useAuth } from '../contexts/AuthContext';
+  Check,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { getUserAlerts, markAlertsAsRead } from "../lib/api/alerts";
+import { UserAlert } from "../lib/types/alerts";
+import { useAuth } from "../contexts/AuthContext";
 
 interface AlertFeedProps {
   limit?: number;
@@ -25,11 +25,11 @@ interface AlertFeedProps {
   filterCategory?: string;
 }
 
-const AlertFeed: React.FC<AlertFeedProps> = ({ 
-  limit = 5, 
+const AlertFeed: React.FC<AlertFeedProps> = ({
+  limit = 5,
   showHeader = true,
-  className = '',
-  filterCategory
+  className = "",
+  filterCategory,
 }) => {
   const [alerts, setAlerts] = useState<UserAlert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,12 +46,12 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
   const fetchAlerts = async () => {
     try {
       setLoading(true);
-      const fetchedAlerts = await getUserAlerts(user?.id || '', limit);
+      const fetchedAlerts = await getUserAlerts(user?.id || "", limit);
       setAlerts(fetchedAlerts);
       setError(null);
     } catch (err) {
-      setError('Failed to load alerts. Please try again later.');
-      console.error('Error fetching alerts:', err);
+      setError("Failed to load alerts. Please try again later.");
+      console.error("Error fetching alerts:", err);
     } finally {
       setLoading(false);
     }
@@ -60,22 +60,22 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
   const handleMarkAsRead = async (alertId: string) => {
     try {
       if (!user?.id || !alertId) return;
-      
+
       await markAlertsAsRead(user.id, [alertId]);
-      
+
       // Update local state
-      setAlerts(prevAlerts => 
-        prevAlerts.map(alert => 
+      setAlerts((prevAlerts) =>
+        prevAlerts.map((alert) =>
           alert.id === alertId ? { ...alert, isRead: true } : alert
         )
       );
     } catch (err) {
-      console.error('Error marking alert as read:', err);
+      console.error("Error marking alert as read:", err);
     }
   };
 
   const toggleExpandAlert = (alertId: string) => {
-    setExpandedAlerts(prev => {
+    setExpandedAlerts((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(alertId)) {
         newSet.delete(alertId);
@@ -88,19 +88,19 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'Earnings':
+      case "Earnings":
         return <BarChart className="h-5 w-5 text-green-500" />;
-      case 'Strategy':
+      case "Strategy":
         return <Briefcase className="h-5 w-5 text-blue-500" />;
-      case 'Regulatory':
+      case "Regulatory":
         return <FileText className="h-5 w-5 text-purple-500" />;
-      case 'Product':
+      case "Product":
         return <TrendingUp className="h-5 w-5 text-indigo-500" />;
-      case 'Analyst':
+      case "Analyst":
         return <AlertCircle className="h-5 w-5 text-yellow-500" />;
-      case 'Macro':
+      case "Macro":
         return <Globe className="h-5 w-5 text-cyan-500" />;
-      case 'Sentiment':
+      case "Sentiment":
         return <MessageCircle className="h-5 w-5 text-pink-500" />;
       default:
         return <Bell className="h-5 w-5 text-gray-500" />;
@@ -109,22 +109,22 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Earnings':
-        return 'bg-green-100 text-green-800';
-      case 'Strategy':
-        return 'bg-blue-100 text-blue-800';
-      case 'Regulatory':
-        return 'bg-purple-100 text-purple-800';
-      case 'Product':
-        return 'bg-indigo-100 text-indigo-800';
-      case 'Analyst':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Macro':
-        return 'bg-cyan-100 text-cyan-800';
-      case 'Sentiment':
-        return 'bg-pink-100 text-pink-800';
+      case "Earnings":
+        return "bg-green-100 text-green-800";
+      case "Strategy":
+        return "bg-blue-100 text-blue-800";
+      case "Regulatory":
+        return "bg-purple-100 text-purple-800";
+      case "Product":
+        return "bg-indigo-100 text-indigo-800";
+      case "Analyst":
+        return "bg-yellow-100 text-yellow-800";
+      case "Macro":
+        return "bg-cyan-100 text-cyan-800";
+      case "Sentiment":
+        return "bg-pink-100 text-pink-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -160,7 +160,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
 
   // Filter alerts based on category if filterCategory is provided
   const filteredAlerts = filterCategory
-    ? alerts.filter(alert => alert.category === filterCategory)
+    ? alerts.filter((alert) => alert.category === filterCategory)
     : alerts;
 
   return (
@@ -178,7 +178,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
               )}
             </h2>
             {alerts.length > 0 && (
-              <button 
+              <button
                 onClick={() => fetchAlerts()}
                 className="text-sm text-indigo-600 hover:text-indigo-800"
               >
@@ -196,23 +196,35 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="p-4 text-center text-gray-500"
+              className="p-8 text-center"
             >
-              <Bell className="h-10 w-10 mx-auto mb-2 text-gray-400" />
-              <p>
-                {alerts.length > 0 && filterCategory
-                  ? `No alerts found in the ${filterCategory} category.`
-                  : 'No alerts at the moment.'}
-              </p>
-              <p className="text-sm mt-1">
-                {alerts.length > 0 && filterCategory
-                  ? 'Try selecting a different category filter.'
-                  : 'We\'ll notify you of important market events here.'}
-              </p>
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <Bell className="h-12 w-12 text-gray-400" />
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {alerts.length > 0 && filterCategory
+                      ? `No ${filterCategory} Alerts`
+                      : "No New Notifications"}
+                  </h3>
+                  <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                    {alerts.length > 0 && filterCategory
+                      ? `We haven't found any alerts in the ${filterCategory} category. Try selecting a different category or check back later.`
+                      : "You're all caught up! We'll notify you here when there are important market events related to your tracked companies and sectors."}
+                  </p>
+                </div>
+                {alerts.length > 0 && filterCategory && (
+                  <button
+                    onClick={() => fetchAlerts()}
+                    className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    View All Alerts
+                  </button>
+                )}
+              </div>
             </motion.div>
           ) : (
-            filteredAlerts.map(alert => {
-              const isExpanded = expandedAlerts.has(alert.id || '');
+            filteredAlerts.map((alert) => {
+              const isExpanded = expandedAlerts.has(alert.id || "");
               return (
                 <motion.div
                   key={alert.id}
@@ -220,7 +232,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className={`p-4 ${!alert.isRead ? 'bg-indigo-50' : ''}`}
+                  className={`p-4 ${!alert.isRead ? "bg-indigo-50" : ""}`}
                 >
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0 mt-1">
@@ -233,7 +245,9 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                         </p>
                         <div className="flex items-center space-x-2">
                           <span className="text-xs text-gray-500">
-                            {formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true })}
+                            {formatDistanceToNow(new Date(alert.timestamp), {
+                              addSuffix: true,
+                            })}
                           </span>
                           {!alert.isRead && (
                             <span className="inline-block h-2 w-2 rounded-full bg-indigo-600"></span>
@@ -241,52 +255,60 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                         </div>
                       </div>
                       <div className="mt-1">
-                        <p className={`text-sm text-gray-600 ${isExpanded ? '' : 'line-clamp-2'}`}>
+                        <p
+                          className={`text-sm text-gray-600 ${
+                            isExpanded ? "" : "line-clamp-2"
+                          }`}
+                        >
                           {alert.description}
                         </p>
                       </div>
                       <div className="mt-2 flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(alert.category)}`}>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(
+                              alert.category
+                            )}`}
+                          >
                             {alert.category}
                           </span>
                           {alert.relatedTo && (
                             <span className="text-xs text-gray-500">
-                              {Array.isArray(alert.relatedTo) 
-                                ? (
-                                  <>
-                                    {alert.relatedTo.slice(0, 2).join(', ')}
-                                    {alert.relatedTo.length > 2 && '...'}
-                                  </>
-                                ) 
-                                : typeof alert.relatedTo === 'string' 
-                                  ? (
-                                    <>
-                                      {(() => {
-                                        try {
-                                          const parsed = JSON.parse(alert.relatedTo);
-                                          return Array.isArray(parsed) 
-                                            ? (
-                                              <>
-                                                {parsed.slice(0, 2).join(', ')}
-                                                {parsed.length > 2 && '...'}
-                                              </>
-                                            )
-                                            : String(alert.relatedTo).slice(0, 30);
-                                        } catch (e) {
-                                          return String(alert.relatedTo).slice(0, 30);
-                                        }
-                                      })()}
-                                    </>
-                                  )
-                                  : null
-                              }
+                              {Array.isArray(alert.relatedTo) ? (
+                                <>
+                                  {alert.relatedTo.slice(0, 2).join(", ")}
+                                  {alert.relatedTo.length > 2 && "..."}
+                                </>
+                              ) : typeof alert.relatedTo === "string" ? (
+                                <>
+                                  {(() => {
+                                    try {
+                                      const parsed = JSON.parse(
+                                        alert.relatedTo
+                                      );
+                                      return Array.isArray(parsed) ? (
+                                        <>
+                                          {parsed.slice(0, 2).join(", ")}
+                                          {parsed.length > 2 && "..."}
+                                        </>
+                                      ) : (
+                                        String(alert.relatedTo).slice(0, 30)
+                                      );
+                                    } catch {
+                                      return String(alert.relatedTo).slice(
+                                        0,
+                                        30
+                                      );
+                                    }
+                                  })()}
+                                </>
+                              ) : null}
                             </span>
                           )}
                         </div>
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => toggleExpandAlert(alert.id || '')}
+                            onClick={() => toggleExpandAlert(alert.id || "")}
                             className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
                           >
                             {isExpanded ? (
@@ -303,7 +325,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                           </button>
                           {!alert.isRead && (
                             <button
-                              onClick={() => handleMarkAsRead(alert.id || '')}
+                              onClick={() => handleMarkAsRead(alert.id || "")}
                               className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center"
                             >
                               <Check className="h-4 w-4 mr-1" />
@@ -320,11 +342,13 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
           )}
         </AnimatePresence>
       </div>
-      
+
       {alerts.length > 0 && (
         <div className="border-t border-gray-200 p-4">
           <button
-            onClick={() => {/* Navigate to alerts page */}}
+            onClick={() => {
+              /* Navigate to alerts page */
+            }}
             className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             View all alerts

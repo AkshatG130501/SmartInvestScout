@@ -135,23 +135,26 @@ export class PersonalizedChatService {
    * Extract insights context from a query if it exists
    * This handles the case where the frontend prepends insights context to the query
    */
-  private extractInsightsContext(query: string): { extractedQuery: string; insightsContext: string | null } {
+  private extractInsightsContext(query: string): {
+    extractedQuery: string;
+    insightsContext: string | null;
+  } {
     // Check if the query contains the insights context marker
     const contextMarker = 'Context about ';
     const questionMarker = '\n\nQuestion: ';
-    
+
     if (query.includes(contextMarker) && query.includes(questionMarker)) {
       const contextStartIndex = query.indexOf(contextMarker);
       const questionStartIndex = query.indexOf(questionMarker);
-      
+
       if (contextStartIndex >= 0 && questionStartIndex > contextStartIndex) {
         const insightsContext = query.substring(contextStartIndex, questionStartIndex);
         const extractedQuery = query.substring(questionStartIndex + questionMarker.length);
-        
+
         return { extractedQuery, insightsContext };
       }
     }
-    
+
     // If no context markers found, return the original query
     return { extractedQuery: query, insightsContext: null };
   }
@@ -159,7 +162,7 @@ export class PersonalizedChatService {
   private constructPersonalizedPrompt(profile: UserProfile, query: string): string {
     // Extract insights context if present
     const { extractedQuery, insightsContext } = this.extractInsightsContext(query);
-    
+
     const holdingsStr =
       profile.holdings.length > 0
         ? profile.holdings.map((h) => `- ${h.name} (${h.symbol})`).join('\n')
@@ -182,7 +185,7 @@ export class PersonalizedChatService {
   **Holdings:**
   ${holdingsStr}
   `;
-  
+
     // Add insights context if available
     if (insightsContext) {
       prompt += `
@@ -190,7 +193,7 @@ export class PersonalizedChatService {
   ${insightsContext}
   `;
     }
-    
+
     prompt += `
   ---
   
@@ -207,7 +210,7 @@ export class PersonalizedChatService {
   - Format the entire response in **Markdown**.
   - **Do not** include citations or numbered references like [1], [2], or [source].
   `;
-  
+
     return prompt;
   }
 
@@ -217,7 +220,15 @@ export class PersonalizedChatService {
   async getPersonalizedResponseStream(
     userId: string,
     query: string
-  ): Promise<{ stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>; context: any }> {
+  ): Promise<{
+    stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>;
+    context: {
+      riskAppetite: string;
+      investmentGoals: string[];
+      watchlist: string[];
+      holdings: string[];
+    } | null;
+  }> {
     try {
       // Get user profile
       const userProfile = await this.profileService.getUserProfile(userId);

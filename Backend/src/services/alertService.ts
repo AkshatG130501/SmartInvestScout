@@ -33,7 +33,7 @@ export async function getUserAlertPreferences(userId: string): Promise<AlertPref
         sectors: data[0].sectors || [],
         frequency: data[0].frequency || 'daily',
         notificationChannels: data[0].notification_channels || ['app'],
-        minImpactLevel: data[0].min_impact_level || 'medium'
+        minImpactLevel: data[0].min_impact_level || 'medium',
       };
       return preferences;
     }
@@ -45,9 +45,9 @@ export async function getUserAlertPreferences(userId: string): Promise<AlertPref
       sectors: [],
       frequency: 'daily',
       notificationChannels: ['app'],
-      minImpactLevel: 'medium'
+      minImpactLevel: 'medium',
     };
-    
+
     return defaultPreferences;
   } catch (error) {
     console.error('Error in getUserAlertPreferences:', error);
@@ -58,7 +58,7 @@ export async function getUserAlertPreferences(userId: string): Promise<AlertPref
       sectors: [],
       frequency: 'daily',
       notificationChannels: ['app'],
-      minImpactLevel: 'medium'
+      minImpactLevel: 'medium',
     };
   }
 }
@@ -77,7 +77,7 @@ export async function updateAlertPreferences(preferences: AlertPreferences): Pro
       sectors: preferences.sectors,
       frequency: preferences.frequency,
       notification_channels: preferences.notificationChannels,
-      min_impact_level: preferences.minImpactLevel
+      min_impact_level: preferences.minImpactLevel,
     };
 
     const { error } = await supabase
@@ -111,13 +111,13 @@ export async function getAllUserAlertPreferences(): Promise<AlertPreferences[]> 
 
     // Map snake_case database fields to camelCase TypeScript properties
     if (data && data.length > 0) {
-      return data.map(item => ({
+      return data.map((item) => ({
         userId: item.user_id,
         companies: item.companies || [],
         sectors: item.sectors || [],
         frequency: item.frequency || 'daily',
         notificationChannels: item.notification_channels || ['app'],
-        minImpactLevel: item.min_impact_level || 'medium'
+        minImpactLevel: item.min_impact_level || 'medium',
       }));
     }
 
@@ -136,15 +136,18 @@ export async function getAllUserAlertPreferences(): Promise<AlertPreferences[]> 
 export async function storeMarketEvents(events: MarketEvent[]): Promise<string[]> {
   try {
     // First, ensure the data is properly formatted for the database
-    const formattedEvents = events.map((event) => ({
-      event_title: event.event_title,
-      summary: event.summary,
-      impact_keywords: JSON.stringify(event.impact_keywords || []),
-      related_companies: JSON.stringify(event.related_companies || []),
-      sectors: JSON.stringify(event.sectors || []),
-      timestamp: event.timestamp || new Date().toISOString(),
-      source: event.source || 'API'
-    }));
+    const formattedEvents = events.map((event) => {
+      const formatted = {
+        event_title: event.event_title,
+        summary: event.summary,
+        impact_keywords: JSON.stringify(event.impact_keywords || []),
+        related_companies: JSON.stringify(event.related_companies || []),
+        sectors: JSON.stringify(event.sectors || []),
+        timestamp: event.timestamp || new Date().toISOString(),
+        source: event.source || 'API',
+      };
+      return formatted;
+    });
 
     // Use insert instead of upsert to avoid ON CONFLICT issues
     const { data, error } = await supabase
@@ -153,13 +156,12 @@ export async function storeMarketEvents(events: MarketEvent[]): Promise<string[]
       .select('id');
 
     if (error) {
-      console.error('Error storing market events:', error);
+      console.error('[ALERT_FLOW] ERROR: Error storing market events:', error);
       return [];
     }
-
     return data.map((item: { id: string }) => item.id);
   } catch (error) {
-    console.error('Error in storeMarketEvents:', error);
+    console.error('[ALERT_FLOW] ERROR: Error in storeMarketEvents:', error);
     return [];
   }
 }
@@ -200,46 +202,64 @@ export async function createUserAlerts(
           const matchedCompanies = event.related_companies.filter((company) =>
             preferences.companies.includes(company)
           );
-          description += ` This affects ${matchedCompanies.join(', ')} in your portfolio.`;
+          if (matchedCompanies.length > 0) {
+            description += `\n\nThis event is relevant to ${matchedCompanies.join(
+              ', '
+            )}, which you are tracking.`;
+          }
         }
 
-        if (sectorMatch && !companyMatch) {
+        if (sectorMatch) {
           const matchedSectors = event.sectors.filter((sector) =>
             preferences.sectors.includes(sector)
           );
-          description += ` You're following the ${matchedSectors.join(', ')} sector(s).`;
+          if (matchedSectors.length > 0) {
+            description += `\n\nThis affects the ${matchedSectors.join(
+              ', '
+            )} sector(s), which you are monitoring.`;
+          }
         }
 
         userAlerts.push({
-          user_id: userId,
-          userId: userId, // Add camelCase version for TypeScript compatibility
           title: event.event_title,
           description,
           category,
-          related_to: JSON.stringify([...event.related_companies, ...event.sectors]),
-          relatedTo: [...event.related_companies, ...event.sectors], // Add camelCase version
-          timestamp: new Date().toISOString(),
-          is_read: false,
-          isRead: false, // Add camelCase version
-          event_id: event.id,
-          eventId: event.id, // Add camelCase version
+          timestamp: event.timestamp,
+          userId,
+          relatedTo: [...event.related_companies, ...event.sectors],
+          isRead: false,
+          eventId: event.id,
         });
       }
     }
 
-    // Store alerts in database
-    if (userAlerts.length > 0) {
-      const { error } = await supabase.from('user_alerts').upsert(userAlerts);
-
-      if (error) {
-        console.error('Error creating user alerts:', error);
-        return 0;
-      }
+    // If no alerts were created, return early
+    if (userAlerts.length === 0) {
+      return 0;
     }
 
+    // Format alerts for database insertion
+    const formattedAlerts = userAlerts.map((alert) => ({
+      user_id: alert.userId,
+      title: alert.title,
+      description: alert.description,
+      category: alert.category,
+      related_to: JSON.stringify(alert.relatedTo),
+      timestamp: alert.timestamp,
+      is_read: alert.isRead,
+      event_id: alert.eventId,
+    }));
+
+    // Insert alerts into database
+    const { error } = await supabase.from('user_alerts').insert(formattedAlerts);
+
+    if (error) {
+      console.error('[ALERT_FLOW] ERROR: Error creating user alerts:', error);
+      return 0;
+    }
     return userAlerts.length;
   } catch (error) {
-    console.error('Error in createUserAlerts:', error);
+    console.error('[ALERT_FLOW] ERROR: Error in createUserAlerts:', error);
     return 0;
   }
 }
@@ -257,10 +277,6 @@ export async function getUserAlerts(
   offset: number = 0
 ): Promise<UserAlert[]> {
   try {
-    // First, check if we need to clean up any duplicate alerts
-    await removeDuplicateAlerts(userId);
-    
-    // Now fetch the alerts
     const { data, error } = await supabase
       .from('user_alerts')
       .select('*')
@@ -270,136 +286,29 @@ export async function getUserAlerts(
 
     if (error) {
       console.error('Error fetching user alerts:', error);
-      // Return sample alerts on error
-      return generateSampleAlerts(userId);
+      return [];
     }
 
-    // Map snake_case database fields to camelCase TypeScript properties
-    if (data && data.length > 0) {
-      return data.map(item => ({
-        id: item.id,
-        userId: item.user_id,
-        title: item.title,
-        description: item.description,
-        category: item.category,
-        relatedTo: item.related_to || [],
-        timestamp: item.timestamp,
-        isRead: item.is_read,
-        eventId: item.event_id
-      }));
+    if (!data || data.length === 0) {
+      return [];
     }
 
-    // If no alerts found, try to process market events to generate some
-    // but don't do this if we're not on the first page
-    if (offset === 0) {
-      await runManualProcessing();
-      
-      // Check again after processing
-      const { data: newData, error: newError } = await supabase
-        .from('user_alerts')
-        .select('*')
-        .eq('user_id', userId)
-        .order('timestamp', { ascending: false })
-        .range(0, limit - 1);
-        
-      if (!newError && newData && newData.length > 0) {
-        return newData.map(item => ({
-          id: item.id,
-          userId: item.user_id,
-          title: item.title,
-          description: item.description,
-          category: item.category,
-          relatedTo: item.related_to || [],
-          timestamp: item.timestamp,
-          isRead: item.is_read,
-          eventId: item.event_id
-        }));
-      }
-    }
-    
-    // If still no alerts, return sample alerts
-    return generateSampleAlerts(userId);
+    // Map database fields to TypeScript properties
+    return data.map((alert) => ({
+      id: alert.id,
+      title: alert.title,
+      description: alert.description,
+      category: alert.category,
+      timestamp: alert.timestamp,
+      userId: alert.user_id,
+      relatedTo: alert.related_to || [],
+      isRead: alert.is_read || false,
+      eventId: alert.event_id,
+    }));
   } catch (error) {
     console.error('Error in getUserAlerts:', error);
-    return generateSampleAlerts(userId);
+    return [];
   }
-}
-
-/**
- * Generates sample alerts for demonstration when no real alerts exist
- * @param userId User ID to generate alerts for
- * @returns Array of sample user alerts
- */
-function generateSampleAlerts(userId: string): UserAlert[] {
-  console.log('Generating sample alerts for user', userId);
-  
-  // Current timestamp
-  const now = new Date();
-  
-  // Generate timestamps for different alerts
-  const timestamp1 = new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(); // 2 hours ago
-  const timestamp2 = new Date(now.getTime() - 8 * 60 * 60 * 1000).toISOString(); // 8 hours ago
-  const timestamp3 = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(); // 1 day ago
-  const timestamp4 = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(); // 2 days ago
-  const timestamp5 = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(); // 3 days ago
-  
-  return [
-    {
-      id: 'sample-1',
-      userId: userId,
-      title: 'Reliance Industries Reports Strong Q4 Results',
-      description: 'Reliance Industries reported a 15% increase in quarterly profit, exceeding analyst expectations. This affects Reliance Industries in your portfolio.',
-      category: 'Earnings',
-      relatedTo: ['Reliance Industries', 'Energy'],
-      timestamp: timestamp1,
-      isRead: false,
-      eventId: 'sample-event-1'
-    },
-    {
-      id: 'sample-2',
-      userId: userId,
-      title: 'HDFC Bank Announces Rural Banking Initiative',
-      description: 'HDFC Bank plans to open 500 new branches in rural areas. You\'re following the Banking sector.',
-      category: 'Strategy',
-      relatedTo: ['HDFC Bank', 'Banking'],
-      timestamp: timestamp2,
-      isRead: false,
-      eventId: 'sample-event-2'
-    },
-    {
-      id: 'sample-3',
-      userId: userId,
-      title: 'New Tech Regulations Announced',
-      description: 'The government unveiled new regulations for technology companies focusing on data privacy. This affects TCS, Infosys in your portfolio.',
-      category: 'Regulatory',
-      relatedTo: ['TCS', 'Infosys', 'IT'],
-      timestamp: timestamp3,
-      isRead: true,
-      eventId: 'sample-event-3'
-    },
-    {
-      id: 'sample-4',
-      userId: userId,
-      title: 'Tata Motors Launches New EV Model',
-      description: 'Tata Motors unveiled its new electric vehicle with extended range. This affects Tata Motors in your portfolio.',
-      category: 'Product',
-      relatedTo: ['Tata Motors', 'Auto'],
-      timestamp: timestamp4,
-      isRead: true,
-      eventId: 'sample-event-4'
-    },
-    {
-      id: 'sample-5',
-      userId: userId,
-      title: 'RBI Announces Policy Rate Decision',
-      description: 'The Reserve Bank of India maintained key policy rates. You\'re following the Banking sector.',
-      category: 'Macro',
-      relatedTo: ['Banking', 'Financial Services'],
-      timestamp: timestamp5,
-      isRead: true,
-      eventId: 'sample-event-5'
-    }
-  ];
 }
 
 /**
@@ -415,9 +324,6 @@ export async function markAlertsAsRead(userId: string, alertIds: string[]): Prom
       .update({ is_read: true })
       .eq('user_id', userId)
       .in('id', alertIds);
-      
-    // Log the operation for debugging
-    console.log(`Marked ${alertIds.length} alerts as read for user ${userId}`);
 
     if (error) {
       console.error('Error marking alerts as read:', error);
@@ -465,10 +371,7 @@ export async function countUnreadAlerts(userId: string): Promise<number> {
 export async function removeDuplicateAlerts(userId: string): Promise<boolean> {
   try {
     // First, get all alerts for the user
-    const { data, error } = await supabase
-      .from('user_alerts')
-      .select('*')
-      .eq('user_id', userId);
+    const { data, error } = await supabase.from('user_alerts').select('*').eq('user_id', userId);
 
     if (error || !data) {
       console.error('Error fetching alerts for deduplication:', error);
@@ -476,40 +379,41 @@ export async function removeDuplicateAlerts(userId: string): Promise<boolean> {
     }
 
     // Group alerts by title + category + description to find duplicates
-    const alertGroups = new Map<string, any[]>();
-    
-    data.forEach(alert => {
+    const alertGroups = new Map<string, UserAlert[]>();
+
+    data.forEach((alert) => {
       // Create a unique key for each alert based on content
       const key = `${alert.title}|${alert.category}|${alert.description}`;
-      
+
       if (!alertGroups.has(key)) {
         alertGroups.set(key, []);
       }
-      
+
       alertGroups.get(key)?.push(alert);
     });
 
     // For each group with more than one alert, keep the most recent one and delete the rest
     const alertsToDelete: string[] = [];
-    
-    alertGroups.forEach(group => {
+
+    alertGroups.forEach((group) => {
       if (group.length > 1) {
         // Sort by timestamp descending (newest first)
         group.sort((a, b) => {
           return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
         });
-        
+
         // Keep the first one (newest) and mark the rest for deletion
         for (let i = 1; i < group.length; i++) {
-          alertsToDelete.push(group[i].id);
+          const id = group[i].id;
+          if (typeof id === 'string') {
+            alertsToDelete.push(id);
+          }
         }
       }
     });
 
     // Delete the duplicate alerts if any were found
     if (alertsToDelete.length > 0) {
-      console.log(`Removing ${alertsToDelete.length} duplicate alerts for user ${userId}`);
-      
       const { error: deleteError } = await supabase
         .from('user_alerts')
         .delete()
@@ -535,11 +439,9 @@ export async function removeDuplicateAlerts(userId: string): Promise<boolean> {
  */
 export async function processMarketEvents(): Promise<number> {
   try {
-    // 1. Query Sonar for recent events
-    const events = await querySonarForEvents(72); // Last 4 hours
+    const events = await querySonarForEvents(168); // Last 72 hours
 
     if (events.length === 0) {
-      console.log('No new market events found');
       return 0;
     }
 
@@ -547,12 +449,13 @@ export async function processMarketEvents(): Promise<number> {
     const eventIds = await storeMarketEvents(events);
 
     // Add IDs to events
-    const eventsWithIds = events.map((event, index) => ({
-      ...event,
-      id: eventIds[index],
-    }));
-
-    // 3. Get all user preferences
+    const eventsWithIds = events.map((event, index) => {
+      const eventWithId = {
+        ...event,
+        id: eventIds[index],
+      };
+      return eventWithId;
+    });
     const allUserPreferences = await getAllUserAlertPreferences();
 
     // 4. Create alerts for each user
@@ -561,21 +464,19 @@ export async function processMarketEvents(): Promise<number> {
     for (const preferences of allUserPreferences) {
       // Skip users without a userId
       if (!preferences.userId && !preferences.user_id) {
-        console.warn('Skipping alert creation for user with missing ID');
+        console.warn('[ALERT_FLOW] WARNING: Skipping alert creation for user with missing ID');
         continue;
       }
-      
+
       // Use either camelCase or snake_case version of the user ID
       const userId = preferences.userId || preferences.user_id || '';
       const alertsCreated = await createUserAlerts(userId, eventsWithIds, preferences);
 
       totalAlerts += alertsCreated;
     }
-
-    console.log(`Created ${totalAlerts} alerts for ${allUserPreferences.length} users`);
     return totalAlerts;
   } catch (error) {
-    console.error('Error in processMarketEvents:', error);
+    console.error('[ALERT_FLOW] ERROR: Error in processMarketEvents:', error);
     return 0;
   }
 }
@@ -585,13 +486,11 @@ export async function processMarketEvents(): Promise<number> {
  * @returns Number of alerts created
  */
 export async function runManualProcessing(): Promise<number> {
-  console.log('Running manual market event processing...');
   try {
     const alertsCreated = await processMarketEvents();
-    console.log(`Manual processing completed. Created ${alertsCreated} alerts.`);
     return alertsCreated;
   } catch (error) {
-    console.error('Error in manual market event processing:', error);
+    console.error('[ALERT_FLOW] ERROR: Error in manual market event processing:', error);
     return 0;
   }
 }
