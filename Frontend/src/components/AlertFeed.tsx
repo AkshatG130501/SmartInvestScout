@@ -35,6 +35,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedAlerts, setExpandedAlerts] = useState<Set<string>>(new Set());
+  const [truncatedAlerts, setTruncatedAlerts] = useState<Set<string>>(new Set());
   const { user } = useAuth();
 
   useEffect(() => {
@@ -256,6 +257,25 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                       </div>
                       <div className="mt-1">
                         <p
+                          ref={(el) => {
+                            // Check if text is truncated and update state accordingly
+                            if (el && !isExpanded) {
+                              const isTruncated = el.scrollHeight > el.clientHeight;
+                              if (isTruncated && !truncatedAlerts.has(alert.id || "")) {
+                                setTruncatedAlerts(prev => {
+                                  const newSet = new Set(prev);
+                                  newSet.add(alert.id || "");
+                                  return newSet;
+                                });
+                              } else if (!isTruncated && truncatedAlerts.has(alert.id || "")) {
+                                setTruncatedAlerts(prev => {
+                                  const newSet = new Set(prev);
+                                  newSet.delete(alert.id || "");
+                                  return newSet;
+                                });
+                              }
+                            }
+                          }}
                           className={`text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300 ${
                             isExpanded ? "" : "line-clamp-2"
                           }`}
@@ -307,22 +327,24 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                           )}
                         </div>
                         <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => toggleExpandAlert(alert.id || "")}
-                            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center transition-colors duration-300"
-                          >
-                            {isExpanded ? (
-                              <>
-                                <ChevronUp className="h-4 w-4 mr-1" />
-                                Less
-                              </>
-                            ) : (
-                              <>
-                                <ChevronDown className="h-4 w-4 mr-1" />
-                                More
-                              </>
-                            )}
-                          </button>
+                          {(isExpanded || truncatedAlerts.has(alert.id || "")) && (
+                            <button
+                              onClick={() => toggleExpandAlert(alert.id || "")}
+                              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center transition-colors duration-300"
+                            >
+                              {isExpanded ? (
+                                <>
+                                  <ChevronUp className="h-4 w-4 mr-1" />
+                                  Less
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="h-4 w-4 mr-1" />
+                                  More
+                                </>
+                              )}
+                            </button>
+                          )}
                           {!alert.isRead && (
                             <button
                               onClick={() => handleMarkAsRead(alert.id || "")}

@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 
 // Components
 import ConversationSidebar from "../components/ConversationSidebar";
+import ChatAlertPanel from "../components/chat/ChatAlertPanel";
 import {
   MessageBubble,
   ProfilePrompt,
@@ -36,7 +37,9 @@ import {
   ChatResponse,
 } from "../lib/api/types";
 import { Message } from "../types/chat";
+import { UserAlert } from "../lib/types/alerts";
 import { ROUTES } from "../lib/constants";
+import { extractTopicsFromMessages, formatAlertForChat } from "../utils/alertUtils";
 
 /**
  * Constants
@@ -69,6 +72,7 @@ const Chat: React.FC = () => {
   const [showConversationSidebar, setShowConversationSidebar] = useState(false);
   const [activeConversation, setActiveConversation] =
     useState<Conversation | null>(null);
+  const [relatedTopics, setRelatedTopics] = useState<string[]>([]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -201,6 +205,26 @@ const Chat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+  
+  // Extract topics from messages for alert matching
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Extract topics from user messages only
+      const userMessages = messages
+        .filter(msg => msg.type === 'user')
+        .map(msg => msg.content);
+      
+      if (userMessages.length > 0) {
+        const topics = extractTopicsFromMessages(userMessages);
+        // Preserve existing topics to maintain panel visibility
+        setRelatedTopics(prevTopics => {
+          // Combine previous and new topics, removing duplicates
+          const combinedTopics = [...new Set([...prevTopics, ...topics])];
+          return combinedTopics;
+        });
+      }
+    }
+  }, [messages]);
 
   // Effect to check for profile and show prompt if needed
   useEffect(() => {
@@ -359,6 +383,89 @@ const Chat: React.FC = () => {
   const toggleConversationSidebar = () => {
     setShowConversationSidebar(true);
   };
+  
+  // Handle asking about an alert
+  const handleAskAboutAlert = (alert: UserAlert) => {
+    // Ensure relatedTo is an array and has content
+    const relatedToText = Array.isArray(alert.relatedTo) && alert.relatedTo.length > 0 
+      ? alert.relatedTo.join(', ') 
+      : (alert.title || 'this market event');
+    
+    // Create a system message about the alert
+    const systemMessage: Message = {
+      id: uuidv4(),
+      type: "system",
+      content: `You're now discussing an alert about ${relatedToText}`,
+      timestamp: new Date(),
+    };
+    
+    // Create a user message with the alert details
+    const userMessage: Message = {
+      id: uuidv4(),
+      type: "user",
+      content: `Tell me more about this alert and how it might impact investments: ${formatAlertForChat(alert)}`,
+      timestamp: new Date(),
+    };
+    
+    // Add messages to the chat
+    setMessages(prev => [...prev, systemMessage, userMessage]);
+    
+    // Process the alert question
+    if (user?.id) {
+      setIsTyping(true);
+      
+      getPersonalizedChatResponse(
+        user.id,
+        userMessage.content,
+        activeConversation?.id
+      ).then(response => {
+        // Add AI response
+        const aiMessage: Message = {
+          id: uuidv4(),
+          type: "ai",
+          content: response.content,
+          timestamp: new Date(),
+          personalizationContext: response.personalizationContext,
+        };
+        
+        setMessages(prev => [...prev, aiMessage]);
+        
+        // Update conversation in database
+        if (activeConversation?.id) {
+          addMessageToConversation(
+            activeConversation.id,
+            userMessage.content,
+            response.content,
+            response.personalizationContext ?? undefined
+          );
+        } else {
+          // Create a new conversation
+          createConversation(
+            user.id,
+            userMessage.content,
+            response.content,
+            response.personalizationContext ?? undefined
+          ).then(newConversation => {
+            setActiveConversation(newConversation);
+          });
+        }
+      }).catch(error => {
+        console.error("Error processing alert question:", error);
+        
+        // Add error message
+        const errorMessage: Message = {
+          id: uuidv4(),
+          type: "system",
+          content: "Sorry, there was an error processing your request about this alert. Please try again.",
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, errorMessage]);
+      }).finally(() => {
+        setIsTyping(false);
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-300">
@@ -373,6 +480,15 @@ const Chat: React.FC = () => {
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 dark:bg-gray-900 transition-colors duration-300">
         <div className="max-w-3xl mx-auto">
+          {/* Alert Panel - Only show for authenticated users with messages */}
+          {user?.id && messages.length > 0 && (
+            <ChatAlertPanel
+              userId={user.id}
+              relatedTopics={relatedTopics}
+              onAskAboutAlert={handleAskAboutAlert}
+              className="mb-4"
+            />
+          )}
           {showProfilePrompt && (
             <ProfilePrompt
               onClose={() => setShowProfilePrompt(false)}
