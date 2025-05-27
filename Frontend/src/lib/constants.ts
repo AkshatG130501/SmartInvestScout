@@ -1,6 +1,9 @@
 /**
  * @file Application constants
  * @description Centralized constants for the SmartInvestScout application
+ * 
+ * This file contains all application-wide constants to ensure consistency
+ * and make maintenance easier by having a single source of truth.
  */
 
 // API Configuration
@@ -44,7 +47,34 @@ export const ROUTES = {
   HOME: "/",
   DASHBOARD: "/dashboard",
   PROFILE: "/profile",
+  SETTINGS: "/settings",
   SUMMARY: "/summary",
-  SEARCH_RESULTS: "/search-results",
+  SEARCH: "/search",
+  SEARCH_WITH_QUERY: (query: string) => `/search/${encodeURIComponent(query)}`,
   CHAT: "/chat",
+  ABOUT: "/about",
+  FEATURES: "/features",
+  PRICING: "/pricing",
+  ALERTS: "/alerts",
+  TERMS: "/terms",
+  PRIVACY: "/privacy"
+};
+
+// API Endpoints
+export const API_ENDPOINTS = {
+  SEARCH_SUGGESTIONS: "/api/search/suggestions",
+  SEARCH_HISTORY: "/api/search/history",
+  SEARCH_RECENT: "/api/search/recent",
+  CHAT: "/api/chat",
+  CHAT_HISTORY: "/api/chat/history",
+  PROFILE: "/api/profile",
+  UPLOAD: "/api/upload"
+};
+
+// Local Storage Keys
+export const STORAGE_KEYS = {
+  AUTH_TOKEN: "smart_invest_scout_auth_token",
+  USER_PROFILE: "smart_invest_scout_user_profile",
+  THEME: "smart_invest_scout_theme",
+  DOCUMENT_SUMMARY: "documentSummary"
 };
