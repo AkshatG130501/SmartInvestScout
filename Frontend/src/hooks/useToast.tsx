@@ -38,26 +38,26 @@ const ToastContext = createContext<ToastContextType>({
 
 // Toast colors based on type
 const toastTypeStyles = {
-  info: 'border-blue-200 bg-blue-50',
-  success: 'border-green-200 bg-green-50',
-  warning: 'border-yellow-200 bg-yellow-50',
-  error: 'border-red-200 bg-red-50',
+  info: 'border-red-200 bg-red-50',
+  success: 'border-red-200 bg-red-50',
+  warning: 'border-red-300 bg-red-100',
+  error: 'border-red-400 bg-red-200',
 };
 
 // Toast title colors based on type
 const toastTitleStyles = {
-  info: 'text-blue-800',
-  success: 'text-green-800',
-  warning: 'text-yellow-800',
-  error: 'text-red-800',
+  info: 'text-red-800',
+  success: 'text-red-800',
+  warning: 'text-red-900',
+  error: 'text-red-900',
 };
 
 // Toast description colors based on type
 const toastDescriptionStyles = {
-  info: 'text-blue-700',
-  success: 'text-green-700',
-  warning: 'text-yellow-700',
-  error: 'text-red-700',
+  info: 'text-red-700',
+  success: 'text-red-700',
+  warning: 'text-red-800',
+  error: 'text-red-900',
 };
 
 /**

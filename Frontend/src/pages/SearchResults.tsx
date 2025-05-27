@@ -137,7 +137,7 @@ const SearchResults: React.FC = () => {
                   title: "Login Required",
                   message: "Please log in to ask questions about this company",
                   type: "info",
-                  duration: 2000,
+                  duration: 1000,
                 });
               }
             }}
