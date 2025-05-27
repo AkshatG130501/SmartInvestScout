@@ -27,13 +27,13 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
       viewport={{ once: true, margin: '-100px' }}
-      className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg dark:shadow-gray-900/30 dark:hover:shadow-gray-900/50 transition-all duration-300 p-6"
     >
-      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+      <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center mb-4 transition-colors duration-300">
         {icon}
       </div>
-      <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2 transition-colors duration-300">{title}</h3>
+      <p className="text-gray-600 dark:text-gray-400 transition-colors duration-300">{description}</p>
     </motion.div>
   );
 };
@@ -75,7 +75,7 @@ const HowItWorksSection: React.FC = () => {
   return (
     <section
       id="how-it-works"
-      className="py-16 md:py-24 bg-gradient-to-b from-slate-100 to-white"
+      className="py-16 md:py-24 bg-gradient-to-b from-slate-100 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
     >
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
@@ -85,10 +85,10 @@ const HowItWorksSection: React.FC = () => {
           viewport={{ once: true }}
           className="text-center mb-12 md:mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-300">
             How It Works
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto transition-colors duration-300">
             SmartInvest Scout simplifies investment research by leveraging AI to
             deliver actionable insights, helping you make better investment
             decisions.

@@ -27,8 +27,8 @@ const NavLink: React.FC<NavLinkProps> = ({ to, label, isScrolled, onClick, showN
     to={to}
     className={`font-medium transition-colors duration-300 ${
       isScrolled
-        ? 'text-gray-600 hover:text-indigo-700'
-        : 'text-gray-700 hover:text-indigo-600'
+        ? 'text-gray-600 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-400'
+        : 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
     } ${showNotification ? 'flex items-center' : ''}`}
     onClick={onClick}
   >
@@ -81,7 +81,7 @@ const Header: React.FC = () => {
     <header
       className={`fixed w-full z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-sm shadow-sm py-3'
+          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-sm dark:shadow-gray-800/30 py-3'
           : 'bg-transparent py-5'
       }`}
     >
@@ -94,7 +94,7 @@ const Header: React.FC = () => {
             <BarChart2 className="h-7 w-7 text-indigo-600" strokeWidth={2.5} />
             <span
               className={`transition-colors duration-300 ${
-                isScrolled ? 'text-gray-900' : 'text-gray-800'
+                isScrolled ? 'text-gray-900 dark:text-white' : 'text-gray-800 dark:text-white'
               }`}
             >
               SmartInvest Scout
@@ -130,7 +130,7 @@ const Header: React.FC = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-gray-700 focus:outline-none"
+            className="md:hidden text-gray-700 dark:text-gray-300 focus:outline-none"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? (
@@ -144,7 +144,7 @@ const Header: React.FC = () => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white shadow-lg mt-3 py-4 px-4 absolute w-full">
+        <div className="md:hidden bg-white dark:bg-gray-800 shadow-lg dark:shadow-gray-900/50 mt-3 py-4 px-4 absolute w-full transition-colors duration-300">
           <nav className="flex flex-col space-y-4">
             <NavLink 
               to={ROUTES.ABOUT} 

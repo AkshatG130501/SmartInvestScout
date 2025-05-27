@@ -120,13 +120,13 @@ const TopicButton: React.FC<TopicButtonProps> = ({ topic, onClick }) => (
     key={topic.id}
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
-    className="bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2"
+    className="bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2"
     onClick={() => onClick(topic.id)}
   >
-    <span className="text-indigo-600">{topic.icon}</span>
-    <span className="text-gray-700">{topic.label}</span>
+    <span className="text-indigo-600 dark:text-indigo-400 transition-colors duration-300">{topic.icon}</span>
+    <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300">{topic.label}</span>
     {topic.count !== undefined && (
-      <span className="text-xs text-gray-500 ml-1">{topic.count}+</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 transition-colors duration-300">{topic.count}+</span>
     )}
   </motion.button>
 );
@@ -145,7 +145,7 @@ const QuickAction: React.FC<QuickActionProps> = ({
   <motion.button
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
-    className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-left group"
+    className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-left group"
     onClick={onClick}
   >
     <div className="flex items-center justify-between">
@@ -154,11 +154,11 @@ const QuickAction: React.FC<QuickActionProps> = ({
           <div className={`h-6 w-6 ${iconColor}`}>{icon}</div>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-900">{title}</h3>
-          <p className="text-sm text-gray-500">{description}</p>
+          <h3 className="font-semibold text-gray-900 dark:text-white transition-colors duration-300">{title}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">{description}</p>
         </div>
       </div>
-      <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-indigo-600 transition-colors duration-200" />
+      <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-200" />
     </div>
   </motion.button>
 );
@@ -262,7 +262,7 @@ const Dashboard: React.FC = () => {
       <div>
         <Header />
       </div>
-      <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -271,7 +271,7 @@ const Dashboard: React.FC = () => {
             className="space-y-8"
           >
             {/* Search Section */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 transition-colors duration-300">
               <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
                 <SearchSuggestions
                   onSuggestionClick={handleSuggestionClick}
@@ -316,8 +316,8 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Suggested Topics */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 transition-colors duration-300">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 transition-colors duration-300">
                 Suggested Topics
               </h2>
               <div className="flex flex-wrap gap-3">
@@ -333,8 +333,8 @@ const Dashboard: React.FC = () => {
 
             {/* Trending Topics - Only visible to authenticated users */}
             {user && (
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 transition-colors duration-300">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 transition-colors duration-300">
                   Trending Topics
                 </h2>
                 <div className="flex flex-wrap gap-3">
@@ -350,22 +350,22 @@ const Dashboard: React.FC = () => {
             )}
 
             {/* Recent Searches or Trending Topics */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 transition-colors duration-300">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors duration-300">
                   {user ? "Recent Searches" : "Recent Trending"}
                 </h2>
                 {user ? (
-                  <Clock className="h-5 w-5 text-gray-400" />
+                  <Clock className="h-5 w-5 text-gray-400 dark:text-gray-500 transition-colors duration-300" />
                 ) : (
-                  <TrendingUp className="h-5 w-5 text-gray-400" />
+                  <TrendingUp className="h-5 w-5 text-gray-400 dark:text-gray-500 transition-colors duration-300" />
                 )}
               </div>
               <div className="space-y-3">
                 {user ? (
                   // Show recent searches for logged-in users
                   isLoadingSearches ? (
-                    <div className="text-center py-4 text-gray-500">
+                    <div className="text-center py-4 text-gray-500 dark:text-gray-400 transition-colors duration-300">
                       Loading recent searches...
                     </div>
                   ) : recentSearches.length > 0 ? (
@@ -373,7 +373,7 @@ const Dashboard: React.FC = () => {
                       <motion.button
                         key={search.id}
                         whileHover={{ scale: 1.01 }}
-                        className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg group transition-colors duration-200"
+                        className="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg group transition-colors duration-200"
                         onClick={() => {
                           if (user) {
                             saveSearchQuery(search.query, user.id);
@@ -382,18 +382,18 @@ const Dashboard: React.FC = () => {
                         }}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="bg-gray-100 rounded-full p-2">
-                            <Clock className="h-4 w-4 text-gray-500" />
+                          <div className="bg-gray-100 dark:bg-gray-700 rounded-full p-2 transition-colors duration-300">
+                            <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400 transition-colors duration-300" />
                           </div>
-                          <span className="text-gray-700">{search.query}</span>
+                          <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300">{search.query}</span>
                         </div>
-                        <span className="text-sm text-gray-400">
+                        <span className="text-sm text-gray-400 dark:text-gray-500 transition-colors duration-300">
                           {search.timestamp.toLocaleDateString()}
                         </span>
                       </motion.button>
                     ))
                   ) : (
-                    <div className="text-center py-4 text-gray-500">
+                    <div className="text-center py-4 text-gray-500 dark:text-gray-400 transition-colors duration-300">
                       No recent searches found. Try searching for something!
                     </div>
                   )
@@ -403,19 +403,19 @@ const Dashboard: React.FC = () => {
                     <motion.button
                       key={topic.id}
                       whileHover={{ scale: 1.01 }}
-                      className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg group transition-colors duration-200"
+                      className="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg group transition-colors duration-200"
                       onClick={() => {
                         navigate(ROUTES.SEARCH_WITH_QUERY(topic.label));
                       }}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="bg-indigo-50 rounded-full p-2">
+                        <div className="bg-indigo-50 dark:bg-indigo-900 rounded-full p-2 transition-colors duration-300">
                           {topic.icon}
                         </div>
-                        <span className="text-gray-700">{topic.label}</span>
+                        <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300">{topic.label}</span>
                       </div>
                       {topic.count !== undefined && (
-                        <div className="flex items-center text-sm text-gray-400">
+                        <div className="flex items-center text-sm text-gray-400 dark:text-gray-500 transition-colors duration-300">
                           <TrendingUp className="h-3 w-3 mr-1" />
                           <span>{topic.count.toLocaleString()}</span>
                         </div>

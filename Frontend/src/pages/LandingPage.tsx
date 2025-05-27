@@ -10,7 +10,7 @@ const LandingPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-950 transition-colors duration-300">
       <Header />
       <main className="flex-grow">
         <HeroSection />
