@@ -195,14 +195,14 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
+      <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 ${className} transition-colors duration-300`}>
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4 transition-colors duration-300"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 transition-colors duration-300"></div>
           <div className="space-y-2">
-            <div className="h-4 bg-gray-200 rounded"></div>
-            <div className="h-4 bg-gray-200 rounded"></div>
-            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded transition-colors duration-300"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded transition-colors duration-300"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded transition-colors duration-300"></div>
           </div>
         </div>
       </div>
@@ -210,10 +210,10 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow-md ${className}`}>
-      <div className="border-b border-gray-200 p-4">
-        <h2 className="text-lg font-medium text-gray-900 flex items-center">
-          <Bell className="h-5 w-5 mr-2 text-indigo-600" />
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md ${className} transition-colors duration-300`}>
+      <div className="border-b border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white flex items-center transition-colors duration-300">
+          <Bell className="h-5 w-5 mr-2 text-indigo-600 dark:text-indigo-400 transition-colors duration-300" />
           Alert Preferences
         </h2>
       </div>
@@ -223,7 +223,7 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-center"
+            className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-md flex items-center transition-colors duration-300"
           >
             <AlertTriangle className="h-5 w-5 mr-2" />
             {error}
@@ -234,7 +234,7 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md flex items-center"
+            className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-md flex items-center transition-colors duration-300"
           >
             <Save className="h-5 w-5 mr-2" />
             {success}
@@ -243,8 +243,8 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
 
         {/* Companies Section */}
         <div>
-          <h3 className="text-md font-medium text-gray-900 mb-3">Companies to Track</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <h3 className="text-md font-medium text-gray-900 dark:text-white mb-3 transition-colors duration-300">Companies to Track</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors duration-300">
             Get alerts for specific companies in your watchlist or portfolio.
           </p>
           
@@ -252,12 +252,12 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             {preferences.companies.map(company => (
               <div 
                 key={company}
-                className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm flex items-center"
+                className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded-full text-sm flex items-center transition-colors duration-300"
               >
                 {company}
                 <button 
                   onClick={() => removeCompany(company)}
-                  className="ml-2 text-indigo-400 hover:text-indigo-600"
+                  className="ml-2 text-indigo-400 dark:text-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-200 transition-colors duration-300"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -265,7 +265,7 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             ))}
             
             {preferences.companies.length === 0 && (
-              <p className="text-gray-400 text-sm italic">No companies added yet</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm italic transition-colors duration-300">No companies added yet</p>
             )}
           </div>
           
@@ -279,7 +279,7 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             />
             <button
               onClick={addCompany}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-r-md hover:bg-indigo-700 flex items-center"
+              className="bg-indigo-600 dark:bg-indigo-700 text-white px-4 py-2 rounded-r-md hover:bg-indigo-700 dark:hover:bg-indigo-800 flex items-center transition-colors duration-300"
             >
               <Plus className="h-4 w-4" />
             </button>
@@ -310,8 +310,8 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
         
         {/* Sectors Section */}
         <div>
-          <h3 className="text-md font-medium text-gray-900 mb-3">Sectors to Track</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <h3 className="text-md font-medium text-gray-900 dark:text-white mb-3 transition-colors duration-300">Sectors to Track</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors duration-300">
             Get alerts for industry sectors you're interested in.
           </p>
           
@@ -319,12 +319,12 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             {preferences.sectors.map(sector => (
               <div 
                 key={sector}
-                className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center"
+                className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-sm flex items-center transition-colors duration-300"
               >
                 {sector}
                 <button 
                   onClick={() => removeSector(sector)}
-                  className="ml-2 text-blue-400 hover:text-blue-600"
+                  className="ml-2 text-blue-400 dark:text-blue-300 hover:text-blue-600 dark:hover:text-blue-200 transition-colors duration-300"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -332,7 +332,7 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             ))}
             
             {preferences.sectors.length === 0 && (
-              <p className="text-gray-400 text-sm italic">No sectors added yet</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm italic transition-colors duration-300">No sectors added yet</p>
             )}
           </div>
           
@@ -346,7 +346,7 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             />
             <button
               onClick={addSector}
-              className="bg-blue-600 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 flex items-center"
+              className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 dark:hover:bg-blue-800 flex items-center transition-colors duration-300"
             >
               <Plus className="h-4 w-4" />
             </button>
@@ -377,18 +377,18 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
         
         {/* Alert Frequency */}
         <div>
-          <h3 className="text-md font-medium text-gray-900 mb-3">Alert Frequency</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <h3 className="text-md font-medium text-gray-900 dark:text-white mb-3 transition-colors duration-300">Alert Frequency</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors duration-300">
             How often would you like to receive alerts?
           </p>
           
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => handleFrequencyChange('hourly')}
-              className={`px-4 py-2 rounded-md text-sm flex items-center ${
+              className={`px-4 py-2 rounded-md text-sm flex items-center transition-colors duration-300 ${
                 preferences.frequency === 'hourly'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               <Clock className="h-4 w-4 mr-2" />
@@ -397,10 +397,10 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             
             <button
               onClick={() => handleFrequencyChange('daily')}
-              className={`px-4 py-2 rounded-md text-sm flex items-center ${
+              className={`px-4 py-2 rounded-md text-sm flex items-center transition-colors duration-300 ${
                 preferences.frequency === 'daily'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               <Clock className="h-4 w-4 mr-2" />
@@ -409,10 +409,10 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             
             <button
               onClick={() => handleFrequencyChange('weekly')}
-              className={`px-4 py-2 rounded-md text-sm flex items-center ${
+              className={`px-4 py-2 rounded-md text-sm flex items-center transition-colors duration-300 ${
                 preferences.frequency === 'weekly'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               <Clock className="h-4 w-4 mr-2" />
@@ -423,18 +423,18 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
         
         {/* Notification Channels */}
         <div>
-          <h3 className="text-md font-medium text-gray-900 mb-3">Notification Channels</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <h3 className="text-md font-medium text-gray-900 dark:text-white mb-3 transition-colors duration-300">Notification Channels</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors duration-300">
             How would you like to receive notifications?
           </p>
           
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => toggleNotificationChannel('app')}
-              className={`px-4 py-2 rounded-md text-sm flex items-center ${
+              className={`px-4 py-2 rounded-md text-sm flex items-center transition-colors duration-300 ${
                 preferences.notificationChannels.includes('app')
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               <Bell className="h-4 w-4 mr-2" />
@@ -443,10 +443,10 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             
             <button
               onClick={() => toggleNotificationChannel('email')}
-              className={`px-4 py-2 rounded-md text-sm flex items-center ${
+              className={`px-4 py-2 rounded-md text-sm flex items-center transition-colors duration-300 ${
                 preferences.notificationChannels.includes('email')
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               <Mail className="h-4 w-4 mr-2" />
@@ -455,10 +455,10 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             
             <button
               onClick={() => toggleNotificationChannel('push')}
-              className={`px-4 py-2 rounded-md text-sm flex items-center ${
+              className={`px-4 py-2 rounded-md text-sm flex items-center transition-colors duration-300 ${
                 preferences.notificationChannels.includes('push')
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               <Smartphone className="h-4 w-4 mr-2" />
@@ -469,18 +469,18 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
         
         {/* Impact Level */}
         <div>
-          <h3 className="text-md font-medium text-gray-900 mb-3">Minimum Impact Level</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <h3 className="text-md font-medium text-gray-900 dark:text-white mb-3 transition-colors duration-300">Minimum Impact Level</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors duration-300">
             Filter alerts based on their potential impact on your investments.
           </p>
           
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => handleImpactLevelChange('low')}
-              className={`px-4 py-2 rounded-md text-sm flex items-center ${
+              className={`px-4 py-2 rounded-md text-sm flex items-center transition-colors duration-300 ${
                 preferences.minImpactLevel === 'low'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               Low
@@ -488,10 +488,10 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             
             <button
               onClick={() => handleImpactLevelChange('medium')}
-              className={`px-4 py-2 rounded-md text-sm flex items-center ${
+              className={`px-4 py-2 rounded-md text-sm flex items-center transition-colors duration-300 ${
                 preferences.minImpactLevel === 'medium'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               Medium
@@ -499,10 +499,10 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
             
             <button
               onClick={() => handleImpactLevelChange('high')}
-              className={`px-4 py-2 rounded-md text-sm flex items-center ${
+              className={`px-4 py-2 rounded-md text-sm flex items-center transition-colors duration-300 ${
                 preferences.minImpactLevel === 'high'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               High
@@ -511,14 +511,14 @@ const AlertPreferences: React.FC<AlertPreferencesProps> = ({
         </div>
       </div>
 
-      <div className="border-t border-gray-200 p-4 flex justify-end">
+      <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex justify-end transition-colors duration-300">
         <button
           onClick={handleSave}
           disabled={saving}
-          className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${
+          className={`px-4 py-2 rounded-md text-sm font-medium flex items-center transition-colors duration-300 ${
             saving
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+              : 'bg-indigo-600 dark:bg-indigo-700 text-white hover:bg-indigo-700 dark:hover:bg-indigo-800'
           }`}
         >
           <Save className="h-4 w-4 mr-2" />

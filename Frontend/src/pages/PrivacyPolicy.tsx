@@ -10,20 +10,20 @@ const PrivacyPolicy: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       {/* Sticky Header */}
-      <header className="sticky top-0 bg-white shadow-sm z-10">
+      <header className="sticky top-0 bg-white dark:bg-gray-800 shadow-sm z-10 transition-colors duration-300">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors duration-200"
+              className="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
               aria-label="Go back"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
               <span>Back</span>
             </button>
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white transition-colors duration-300">
               Privacy Policy
             </h1>
             <div className="w-16"></div> {/* Empty div for balanced spacing */}
@@ -33,9 +33,9 @@ const PrivacyPolicy: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-xl shadow-sm p-6 md:p-8">
-          <div className="prose prose-slate max-w-none">
-            <p className="text-gray-600 mb-6">Effective Date: May 24, 2025</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 md:p-8 transition-colors duration-300">
+          <div className="prose prose-slate dark:prose-invert max-w-none transition-colors duration-300">
+            <p className="text-gray-600 dark:text-gray-400 mb-6 transition-colors duration-300">Effective Date: May 24, 2025</p>
 
             <p className="mb-6">
               SmartInvest Scout ("we", "our", or "us") is committed to
@@ -44,27 +44,27 @@ const PrivacyPolicy: React.FC = () => {
               application and services (the "Service").
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-8 mb-4 transition-colors duration-300">
               1. Information We Collect
             </h2>
             <p className="mb-4">
               We may collect the following types of information:
             </p>
 
-            <h3 className="text-lg font-medium text-gray-800 mt-6 mb-3">
+            <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mt-6 mb-3 transition-colors duration-300">
               a) Personal Information
             </h3>
-            <ul className="list-disc pl-6 mb-4 text-gray-700">
+            <ul className="list-disc pl-6 mb-4 text-gray-700 dark:text-gray-300 transition-colors duration-300">
               <li className="mb-2">Name, email address, contact number</li>
               <li className="mb-2">
                 Authentication credentials (if using social or broker logins)
               </li>
             </ul>
 
-            <h3 className="text-lg font-medium text-gray-800 mt-6 mb-3">
+            <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mt-6 mb-3 transition-colors duration-300">
               b) Financial Information
             </h3>
-            <ul className="list-disc pl-6 mb-4 text-gray-700">
+            <ul className="list-disc pl-6 mb-4 text-gray-700 dark:text-gray-300 transition-colors duration-300">
               <li className="mb-2">
                 Portfolio data imported via APIs (e.g., holdings, transactions,
                 P&L)
@@ -74,10 +74,10 @@ const PrivacyPolicy: React.FC = () => {
               </li>
             </ul>
 
-            <h3 className="text-lg font-medium text-gray-800 mt-6 mb-3">
+            <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mt-6 mb-3 transition-colors duration-300">
               c) Technical Information
             </h3>
-            <ul className="list-disc pl-6 mb-6 text-gray-700">
+            <ul className="list-disc pl-6 mb-6 text-gray-700 dark:text-gray-300 transition-colors duration-300">
               <li className="mb-2">Device and browser type</li>
               <li className="mb-2">
                 IP address, app usage logs, and crash data
@@ -87,11 +87,11 @@ const PrivacyPolicy: React.FC = () => {
               </li>
             </ul>
 
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-8 mb-4 transition-colors duration-300">
               2. How We Use Your Data
             </h2>
             <p className="mb-4">We use your data to:</p>
-            <ul className="list-disc pl-6 mb-6 text-gray-700">
+            <ul className="list-disc pl-6 mb-6 text-gray-700 dark:text-gray-300 transition-colors duration-300">
               <li className="mb-2">
                 Provide financial insights based on your queries and portfolio
               </li>
@@ -109,13 +109,13 @@ const PrivacyPolicy: React.FC = () => {
               We do not sell or share your data with third-party advertisers.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-8 mb-4 transition-colors duration-300">
               3. Document Uploads
             </h2>
             <p className="mb-4">
               When you upload financial documents (e.g., PDFs):
             </p>
-            <ul className="list-disc pl-6 mb-6 text-gray-700">
+            <ul className="list-disc pl-6 mb-6 text-gray-700 dark:text-gray-300 transition-colors duration-300">
               <li className="mb-2">
                 We temporarily store and process them to generate insights
               </li>
@@ -128,7 +128,7 @@ const PrivacyPolicy: React.FC = () => {
               </li>
             </ul>
 
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-8 mb-4 transition-colors duration-300">
               4. Third-Party Integrations
             </h2>
             <p className="mb-6">
@@ -142,11 +142,11 @@ const PrivacyPolicy: React.FC = () => {
               with your explicit consent (e.g., OAuth login).
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-8 mb-4 transition-colors duration-300">
               5. Data Retention
             </h2>
             <p className="mb-4">We retain your personal and financial data:</p>
-            <ul className="list-disc pl-6 mb-4 text-gray-700">
+            <ul className="list-disc pl-6 mb-4 text-gray-700 dark:text-gray-300 transition-colors duration-300">
               <li className="mb-2">As long as your account remains active</li>
               <li className="mb-2">
                 Or until you request deletion under "Your Rights"
@@ -156,11 +156,11 @@ const PrivacyPolicy: React.FC = () => {
               Some data may be retained for compliance or legal obligations.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-8 mb-4 transition-colors duration-300">
               6. Your Rights
             </h2>
             <p className="mb-4">As a user, you have the right to:</p>
-            <ul className="list-disc pl-6 mb-4 text-gray-700">
+            <ul className="list-disc pl-6 mb-4 text-gray-700 dark:text-gray-300 transition-colors duration-300">
               <li className="mb-2">Access and review your personal data</li>
               <li className="mb-2">
                 Request correction or deletion of your data
@@ -168,13 +168,13 @@ const PrivacyPolicy: React.FC = () => {
               <li className="mb-2">Withdraw consent and close your account</li>
             </ul>
 
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-8 mb-4 transition-colors duration-300">
               7. Security Practices
             </h2>
             <p className="mb-4">
               We implement best-practice security measures:
             </p>
-            <ul className="list-disc pl-6 mb-4 text-gray-700">
+            <ul className="list-disc pl-6 mb-4 text-gray-700 dark:text-gray-300 transition-colors duration-300">
               <li className="mb-2">Encrypted storage of sensitive data</li>
               <li className="mb-2">OAuth 2.0 and secure API access</li>
               <li className="mb-2">Access control and activity monitoring</li>
@@ -184,7 +184,7 @@ const PrivacyPolicy: React.FC = () => {
               secure. Use the Service at your own discretion.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-8 mb-4 transition-colors duration-300">
               8. Children's Privacy
             </h2>
             <p className="mb-6">
@@ -192,7 +192,7 @@ const PrivacyPolicy: React.FC = () => {
               knowingly collect data from minors.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-8 mb-4 transition-colors duration-300">
               9. Changes to This Policy
             </h2>
             <p className="mb-6">

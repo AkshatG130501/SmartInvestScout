@@ -162,12 +162,12 @@ const Summary: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10 px-6 transition-colors duration-300">
       <div className="max-w-screen-xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-gray-600 hover:text-indigo-600"
+            className="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-300"
           >
             <ArrowLeft className="h-5 w-5 mr-2" /> Back to Upload
           </button>
@@ -187,32 +187,32 @@ const Summary: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 transition-colors duration-300">
           <div className="flex items-center space-x-3 mb-6">
-            <div className="bg-indigo-100 rounded-lg p-2">
-              <FileText className="h-6 w-6 text-indigo-600" />
+            <div className="bg-indigo-100 dark:bg-indigo-900/30 rounded-lg p-2 transition-colors duration-300">
+              <FileText className="h-6 w-6 text-indigo-600 dark:text-indigo-400 transition-colors duration-300" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white transition-colors duration-300">
               Document Summary
             </h1>
           </div>
 
           {loading ? (
-            <p className="text-center text-gray-500">Loading summary...</p>
+            <p className="text-center text-gray-500 dark:text-gray-400 transition-colors duration-300">Loading summary...</p>
           ) : (
             <div>
-              <div className="mb-6 bg-indigo-50 p-4 rounded-lg">
-                <h2 className="text-lg font-semibold text-indigo-800 capitalize">
+              <div className="mb-6 bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg transition-colors duration-300">
+                <h2 className="text-lg font-semibold text-indigo-800 dark:text-indigo-300 capitalize transition-colors duration-300">
                   Document Type: {summary.documentType}
                 </h2>
               </div>
 
-              <div className="prose prose-indigo max-w-none">
+              <div className="prose prose-indigo dark:prose-invert max-w-none transition-colors duration-300">
                 <ReactMarkdown>{summary.dynamicSummary}</ReactMarkdown>
               </div>
 
               <div className="mt-12">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 capitalize">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 capitalize transition-colors duration-300">
                   Ask a Follow-up Question
                 </h2>
 
@@ -223,7 +223,7 @@ const Summary: React.FC = () => {
                       value={question}
                       onChange={(e) => setQuestion(e.target.value)}
                       placeholder="Ask about specific details in the document..."
-                      className="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                      className="flex-1 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 transition-colors duration-300"
                     />
                     <Button
                       label={asking ? "Asking..." : "Ask"}
@@ -240,13 +240,13 @@ const Summary: React.FC = () => {
 
                 {showChat && (
                   <div className="mt-8 border rounded-lg overflow-hidden">
-                    <div className="bg-indigo-50 p-3 border-b">
-                      <h3 className="font-medium text-indigo-800">
+                    <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 border-b border-indigo-100 dark:border-indigo-900 transition-colors duration-300">
+                      <h3 className="font-medium text-indigo-800 dark:text-indigo-300 transition-colors duration-300">
                         Conversation
                       </h3>
                     </div>
 
-                    <div className="max-h-[500px] overflow-y-auto p-4 space-y-4 bg-gray-50">
+                    <div className="max-h-[500px] overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
                       {messages.map((message) => (
                         <div
                           key={message.id}
@@ -259,28 +259,28 @@ const Summary: React.FC = () => {
                           <div
                             className={`max-w-[80%] rounded-lg p-3 ${
                               message.type === "user"
-                                ? "bg-indigo-100 text-indigo-900"
-                                : "bg-white border border-gray-200 shadow-sm"
+                                ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-100"
+                                : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
                             }`}
                           >
                             <div className="flex items-center space-x-2 mb-1">
                               {message.type === "user" ? (
                                 <>
-                                  <User className="h-4 w-4 text-indigo-600" />
-                                  <span className="text-xs font-medium text-indigo-600">
+                                  <User className="h-4 w-4 text-indigo-600 dark:text-indigo-400 transition-colors duration-300" />
+                                  <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 transition-colors duration-300">
                                     You
                                   </span>
                                 </>
                               ) : (
                                 <>
-                                  <Bot className="h-4 w-4 text-gray-600" />
-                                  <span className="text-xs font-medium text-gray-600">
+                                  <Bot className="h-4 w-4 text-gray-600 dark:text-gray-400 transition-colors duration-300" />
+                                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors duration-300">
                                     AI Assistant
                                   </span>
                                 </>
                               )}
                             </div>
-                            <div className="prose prose-sm max-w-none">
+                            <div className="prose prose-sm dark:prose-invert max-w-none transition-colors duration-300">
                               {message.type === "ai" ? (
                                 <ReactMarkdown>{message.content}</ReactMarkdown>
                               ) : (
@@ -288,7 +288,7 @@ const Summary: React.FC = () => {
                               )}
                             </div>
                             <div className="text-right mt-1">
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
                                 {message.timestamp.toLocaleTimeString()}
                               </span>
                             </div>
@@ -298,7 +298,7 @@ const Summary: React.FC = () => {
                       <div ref={messagesEndRef} />
                     </div>
 
-                    <div className="border-t p-3 bg-white">
+                    <div className="border-t border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-800 transition-colors duration-300">
                       <form
                         onSubmit={handleAskQuestion}
                         className="flex space-x-2"
@@ -308,12 +308,12 @@ const Summary: React.FC = () => {
                           value={question}
                           onChange={(e) => setQuestion(e.target.value)}
                           placeholder="Continue the conversation..."
-                          className="flex-1 px-3 py-2 text-sm rounded-md border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+                          className="flex-1 px-3 py-2 text-sm rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 dark:focus:ring-indigo-800 transition-colors duration-300"
                         />
                         <button
                           type="submit"
                           disabled={asking}
-                          className="bg-indigo-600 text-white rounded-md p-2 hover:bg-indigo-700 transition-colors disabled:bg-indigo-400"
+                          className="bg-indigo-600 dark:bg-indigo-700 text-white rounded-md p-2 hover:bg-indigo-700 dark:hover:bg-indigo-800 transition-colors disabled:bg-indigo-400 dark:disabled:bg-indigo-900/50"
                         >
                           {asking ? (
                             <Loader2 className="h-5 w-5 animate-spin" />

@@ -133,12 +133,12 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
       <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
         <div className="flex items-center justify-center h-40">
           <div className="animate-pulse flex space-x-4">
-            <div className="rounded-full bg-gray-200 h-10 w-10"></div>
+            <div className="rounded-full bg-gray-200 dark:bg-gray-700 h-10 w-10 transition-colors duration-300"></div>
             <div className="flex-1 space-y-4 py-1">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 transition-colors duration-300"></div>
               <div className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded transition-colors duration-300"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 transition-colors duration-300"></div>
               </div>
             </div>
           </div>
@@ -149,8 +149,8 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
 
   if (error) {
     return (
-      <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
-        <div className="flex items-center justify-center h-40 text-red-500">
+      <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 ${className} transition-colors duration-300`}>
+        <div className="flex items-center justify-center h-40 text-red-500 dark:text-red-400 transition-colors duration-300">
           <AlertCircle className="h-5 w-5 mr-2" />
           <span>{error}</span>
         </div>
@@ -164,15 +164,15 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
     : alerts;
 
   return (
-    <div className={`bg-white rounded-lg shadow-md ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md ${className} transition-colors duration-300`}>
       {showHeader && (
-        <div className="border-b border-gray-200 p-4">
+        <div className="border-b border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <Bell className="h-5 w-5 mr-2 text-indigo-600" />
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white flex items-center transition-colors duration-300">
+              <Bell className="h-5 w-5 mr-2 text-indigo-600 dark:text-indigo-400 transition-colors duration-300" />
               Market Alerts
               {filterCategory && (
-                <span className="ml-2 text-sm text-gray-500">
+                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
                   Filtered by: {filterCategory}
                 </span>
               )}
@@ -180,7 +180,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
             {alerts.length > 0 && (
               <button
                 onClick={() => fetchAlerts()}
-                className="text-sm text-indigo-600 hover:text-indigo-800"
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors duration-300"
               >
                 Refresh
               </button>
@@ -189,7 +189,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
         </div>
       )}
 
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-gray-200 dark:divide-gray-700 transition-colors duration-300">
         <AnimatePresence>
           {filteredAlerts.length === 0 ? (
             <motion.div
@@ -199,14 +199,14 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
               className="p-8 text-center"
             >
               <div className="flex flex-col items-center justify-center space-y-4">
-                <Bell className="h-12 w-12 text-gray-400" />
+                <Bell className="h-12 w-12 text-gray-400 dark:text-gray-500 transition-colors duration-300" />
                 <div className="space-y-2">
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white transition-colors duration-300">
                     {alerts.length > 0 && filterCategory
                       ? `No ${filterCategory} Alerts`
                       : "No New Notifications"}
                   </h3>
-                  <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto transition-colors duration-300">
                     {alerts.length > 0 && filterCategory
                       ? `We haven't found any alerts in the ${filterCategory} category. Try selecting a different category or check back later.`
                       : "You're all caught up! We'll notify you here when there are important market events related to your tracked companies and sectors."}
@@ -215,7 +215,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                 {alerts.length > 0 && filterCategory && (
                   <button
                     onClick={() => fetchAlerts()}
-                    className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/40 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors duration-300"
                   >
                     View All Alerts
                   </button>
@@ -232,7 +232,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className={`p-4 ${!alert.isRead ? "bg-indigo-50" : ""}`}
+                  className={`p-4 ${!alert.isRead ? "bg-indigo-50 dark:bg-indigo-900/20" : "dark:bg-gray-800"} transition-colors duration-300`}
                 >
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0 mt-1">
@@ -240,7 +240,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate transition-colors duration-300">
                           {alert.title}
                         </p>
                         <div className="flex items-center space-x-2">
@@ -250,13 +250,13 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                             })}
                           </span>
                           {!alert.isRead && (
-                            <span className="inline-block h-2 w-2 rounded-full bg-indigo-600"></span>
+                            <span className="inline-block h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400 transition-colors duration-300"></span>
                           )}
                         </div>
                       </div>
                       <div className="mt-1">
                         <p
-                          className={`text-sm text-gray-600 ${
+                          className={`text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300 ${
                             isExpanded ? "" : "line-clamp-2"
                           }`}
                         >
@@ -273,7 +273,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                             {alert.category}
                           </span>
                           {alert.relatedTo && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
                               {Array.isArray(alert.relatedTo) ? (
                                 <>
                                   {alert.relatedTo.slice(0, 2).join(", ")}
@@ -309,7 +309,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => toggleExpandAlert(alert.id || "")}
-                            className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
+                            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center transition-colors duration-300"
                           >
                             {isExpanded ? (
                               <>
@@ -326,7 +326,7 @@ const AlertFeed: React.FC<AlertFeedProps> = ({
                           {!alert.isRead && (
                             <button
                               onClick={() => handleMarkAsRead(alert.id || "")}
-                              className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center"
+                              className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center transition-colors duration-300"
                             >
                               <Check className="h-4 w-4 mr-1" />
                               Mark read

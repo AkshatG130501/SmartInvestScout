@@ -25,7 +25,7 @@ const Alerts: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <Header />
 
       <div className="pt-24 pb-16">
@@ -38,28 +38,28 @@ const Alerts: React.FC = () => {
             className="mb-8"
           >
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <Bell className="h-8 w-8 mr-3 text-indigo-600" />
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center transition-colors duration-300">
+                <Bell className="h-8 w-8 mr-3 text-indigo-600 dark:text-indigo-400 transition-colors duration-300" />
                 Market Alerts
               </h1>
               <div className="flex space-x-3">
                 <button
                   onClick={handleRefresh}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center"
+                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center transition-colors duration-300"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Refresh
                 </button>
                 <button
                   onClick={() => setShowPreferences(!showPreferences)}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-indigo-700 flex items-center"
+                  className="px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-md shadow-sm text-sm font-medium hover:bg-indigo-700 dark:hover:bg-indigo-800 flex items-center transition-colors duration-300"
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   {showPreferences ? 'Hide Preferences' : 'Preferences'}
                 </button>
               </div>
             </div>
-            <p className="mt-2 text-lg text-gray-600">
+            <p className="mt-2 text-lg text-gray-600 dark:text-gray-300 transition-colors duration-300">
               Stay informed about market events that matter to you
             </p>
           </motion.div>
@@ -72,11 +72,11 @@ const Alerts: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-white rounded-lg shadow-md p-4 mb-6"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6 transition-colors duration-300"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                    <Filter className="h-5 w-5 mr-2 text-indigo-600" />
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-white flex items-center transition-colors duration-300">
+                    <Filter className="h-5 w-5 mr-2 text-indigo-600 dark:text-indigo-400 transition-colors duration-300" />
                     Filter Alerts
                   </h2>
                 </div>
@@ -85,7 +85,7 @@ const Alerts: React.FC = () => {
                     <button
                       key={category}
                       onClick={() => setActiveFilter(category)}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeFilter === category ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeFilter === category ? 'bg-indigo-600 dark:bg-indigo-700 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                     >
                       {category}
                     </button>
@@ -128,10 +128,10 @@ const Alerts: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-100 py-8">
+      <footer className="bg-gray-100 dark:bg-gray-800 py-8 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-gray-600 mb-4 md:mb-0">
+            <div className="text-gray-600 dark:text-gray-400 mb-4 md:mb-0 transition-colors duration-300">
               © {new Date().getFullYear()} SmartInvest Scout. All rights
               reserved.
             </div>

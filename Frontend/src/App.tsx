@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProfileProvider } from './contexts/ProfileContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastContextProvider } from './hooks/useToast';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
@@ -22,7 +23,8 @@ function App() {
     <ToastContextProvider>
       <AuthProvider>
         <ProfileProvider>
-          <Router>
+          <ThemeProvider>
+            <Router>
             <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -60,6 +62,7 @@ function App() {
           />
             </Routes>
           </Router>
+          </ThemeProvider>
         </ProfileProvider>
       </AuthProvider>
     </ToastContextProvider>
