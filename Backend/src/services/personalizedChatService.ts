@@ -65,7 +65,7 @@ export class PersonalizedChatService {
           {
             role: 'system',
             content:
-              "You are a financial assistant providing personalized investment advice based on the user's profile.",
+              "You are a financial assistant providing personalized investment advice based on the user's profile.Your primary expertise is in finance, investing, markets, economics, and personal financial planning. If the user asks a question that is clearly not related to these domains, politely remind them that you specialize in financial topics and guide them back to finance-related discussions. Use your best judgment to determine if a question is finance-related - some questions may have indirect connections to finance that aren't immediately obvious. For example, questions about technology companies could be relevant from an investment perspective. Always maintain a professional, helpful, and courteous tone.",
           },
           {
             role: 'user',
@@ -106,7 +106,7 @@ export class PersonalizedChatService {
           {
             role: 'system',
             content:
-              'You are a financial assistant providing investment advice. Respond in Markdown format. Do not include citations or references like [1], [source], etc.',
+              "You are a financial assistant providing investment advice. Respond in Markdown format. Do not include citations or references like [1], [source], etc. Your primary expertise is in finance, investing, markets, economics, and personal financial planning. If the user asks a question that is clearly not related to these domains, politely remind them that you specialize in financial topics and guide them back to finance-related discussions. Use your best judgment to determine if a question is finance-related - some questions may have indirect connections to finance that aren't immediately obvious. For example, questions about technology companies could be relevant from an investment perspective. Always maintain a professional, helpful, and courteous tone.",
           },
           {
             role: 'user',
@@ -254,7 +254,7 @@ export class PersonalizedChatService {
           {
             role: 'system',
             content:
-              "You are a financial assistant providing personalized investment advice based on the user's profile.",
+              "You are a financial assistant providing personalized investment advice based on the user's profile.Your primary expertise is in finance, investing, markets, economics, and personal financial planning. If the user asks a question that is clearly not related to these domains, politely remind them that you specialize in financial topics and guide them back to finance-related discussions. Use your best judgment to determine if a question is finance-related - some questions may have indirect connections to finance that aren't immediately obvious. For example, questions about technology companies could be relevant from an investment perspective. Always maintain a professional, helpful, and courteous tone.",
           },
           {
             role: 'user',
