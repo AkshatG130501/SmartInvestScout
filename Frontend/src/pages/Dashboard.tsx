@@ -243,7 +243,7 @@ const Dashboard: React.FC = () => {
         title: "Login Required",
         message: "Please log in to upload and analyze documents",
         type: "info",
-        duration: 1000,
+        duration: 1500,
       });
     }
   };

@@ -72,12 +72,21 @@ const SearchResults: React.FC = () => {
   };
 
   const handleFollowUpQuestion = (question: string) => {
-    navigate("/chat", {
-      state: {
-        initialQuestion: question,
-        context: insights,
-      },
-    });
+    if (user) {
+      navigate("/chat", {
+        state: {
+          initialQuestion: question,
+          context: insights,
+        },
+      });
+    } else {
+      showToast({
+        title: "Login Required",
+        message: "Please log in to ask questions about this company",
+        type: "info",
+        duration: 1500,
+      });
+    }
   };
 
   if (loading) {
@@ -137,7 +146,7 @@ const SearchResults: React.FC = () => {
                   title: "Login Required",
                   message: "Please log in to ask questions about this company",
                   type: "info",
-                  duration: 1000,
+                  duration: 1500,
                 });
               }
             }}
