@@ -1,6 +1,11 @@
-import api from './client';
-import { Conversation, ConversationsResponse } from './types';
-import { formatErrorMessage } from './errors';
+import api from "./client";
+import { Conversation, ConversationsResponse } from "./types";
+import { formatErrorMessage } from "./errors";
+
+// Define a type for personalization context, update as needed
+export interface PersonalizationContext {
+  [key: string]: unknown;
+}
 
 /**
  * Creates a new conversation
@@ -14,7 +19,7 @@ export const createConversation = async (
   userId: string,
   message: string,
   response: string,
-  personalizationContext?: any
+  personalizationContext?: PersonalizationContext
 ): Promise<Conversation> => {
   try {
     const result = await api.post('api/conversations', {
@@ -42,17 +47,23 @@ export const addMessageToConversation = async (
   conversationId: string,
   message: string,
   response: string,
-  personalizationContext?: any
+  personalizationContext?: PersonalizationContext
 ): Promise<Conversation> => {
   try {
-    const result = await api.post(`api/conversations/${conversationId}/messages`, {
-      message,
-      response,
-      personalizationContext
-    });
+    const result = await api.post(
+      `api/conversations/${conversationId}/messages`,
+      {
+        message,
+        response,
+        personalizationContext,
+      }
+    );
     return result.data as Conversation;
   } catch (error: unknown) {
-    console.error("Error adding message to conversation:", formatErrorMessage(error));
+    console.error(
+      "Error adding message to conversation:",
+      formatErrorMessage(error)
+    );
     throw error;
   }
 };
@@ -71,7 +82,10 @@ export const getActiveConversation = async (
     const responseData = response.data as { conversation: Conversation | null };
     return responseData.conversation;
   } catch (error: unknown) {
-    console.error("Error fetching active conversation:", formatErrorMessage(error));
+    console.error(
+      "Error fetching active conversation:",
+      formatErrorMessage(error)
+    );
     return null;
   }
 };
@@ -90,12 +104,14 @@ export const getConversations = async (
 ): Promise<ConversationsResponse> => {
   try {
     const params = new URLSearchParams();
-    params.append('limit', limit.toString());
+    params.append("limit", limit.toString());
     if (cursor) {
-      params.append('cursor', cursor);
+      params.append("cursor", cursor);
     }
-    
-    const response = await api.get(`api/conversations/user/${userId}?${params.toString()}`);
+
+    const response = await api.get(
+      `api/conversations/user/${userId}?${params.toString()}`
+    );
     return response.data as ConversationsResponse;
   } catch (error: unknown) {
     console.error("Error fetching conversations:", formatErrorMessage(error));
@@ -149,7 +165,30 @@ export const deleteAllConversations = async (
     await api.delete(`api/conversations/user/${userId}`);
     return true;
   } catch (error: unknown) {
-    console.error("Error deleting all conversations:", formatErrorMessage(error));
-    throw error;
+    console.error(
+      "Error deleting all conversations:",
+      formatErrorMessage(error)
+    );
+    return false;
+  }
+};
+
+/**
+ * Deactivates all active conversations for a user
+ * @param userId The ID of the user
+ * @returns True if the conversations were deactivated successfully
+ */
+export const deactivateUserConversations = async (
+  userId: string
+): Promise<boolean> => {
+  try {
+    await api.post(`api/conversations/user/${userId}/deactivate`);
+    return true;
+  } catch (error: unknown) {
+    console.error(
+      "Error deactivating conversations:",
+      formatErrorMessage(error)
+    );
+    return false;
   }
 };

@@ -4,12 +4,10 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { DocumentSummary } from "../lib/api";
-import { saveSearchQuery, getRecentSearches } from "../lib/api/search";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import SearchSuggestions from "../components/SearchSuggestions";
+import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../hooks/useToast";
 import {
   MessageSquare,
   Upload,
@@ -24,7 +22,10 @@ import {
 } from "lucide-react";
 import Header from "../components/Header";
 import UploadModal from "../components/UploadModal";
+import SearchSuggestions from "../components/SearchSuggestions";
 import { ROUTES, STORAGE_KEYS } from "../lib/constants";
+import { saveSearchQuery, getRecentSearches } from "../lib/api/search";
+import { DocumentSummary } from "../lib/api/types";
 
 /**
  * Interfaces and Types
@@ -76,11 +77,36 @@ const suggestedTopics: Topic[] = [
 
 // Trending topics for logged-out users
 const trendingTopics: Topic[] = [
-  { id: "nifty50", label: "Nifty 50", icon: <BarChart className="w-4 h-4" />, count: 1245 },
-  { id: "ai-stocks", label: "AI Stocks", icon: <Activity className="w-4 h-4" />, count: 987 },
-  { id: "renewable", label: "Renewable Energy", icon: <Leaf className="w-4 h-4" />, count: 856 },
-  { id: "banking", label: "Banking Sector", icon: <DollarSign className="w-4 h-4" />, count: 742 },
-  { id: "tech-stocks", label: "Tech Stocks", icon: <TrendingUp className="w-4 h-4" />, count: 635 },
+  {
+    id: "nifty50",
+    label: "Nifty 50",
+    icon: <BarChart className="w-4 h-4" />,
+    count: 1245,
+  },
+  {
+    id: "ai-stocks",
+    label: "AI Stocks",
+    icon: <Activity className="w-4 h-4" />,
+    count: 987,
+  },
+  {
+    id: "renewable",
+    label: "Renewable Energy",
+    icon: <Leaf className="w-4 h-4" />,
+    count: 856,
+  },
+  {
+    id: "banking",
+    label: "Banking Sector",
+    icon: <DollarSign className="w-4 h-4" />,
+    count: 742,
+  },
+  {
+    id: "tech-stocks",
+    label: "Tech Stocks",
+    icon: <TrendingUp className="w-4 h-4" />,
+    count: 635,
+  },
 ];
 
 // Initial empty array for recent searches
@@ -114,7 +140,7 @@ const QuickAction: React.FC<QuickActionProps> = ({
   iconColor,
   title,
   description,
-  onClick
+  onClick,
 }) => (
   <motion.button
     whileHover={{ scale: 1.02 }}
@@ -137,16 +163,17 @@ const QuickAction: React.FC<QuickActionProps> = ({
   </motion.button>
 );
 
-
-
 /**
  * Main Dashboard component
  */
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<SearchHistoryItemDisplay[]>(initialRecentSearches);
+  const [recentSearches, setRecentSearches] = useState<
+    SearchHistoryItemDisplay[]
+  >(initialRecentSearches);
   const [isLoadingSearches, setIsLoadingSearches] = useState(false);
 
   /**
@@ -154,7 +181,7 @@ const Dashboard: React.FC = () => {
    */
   useEffect(() => {
     document.title = "Dashboard - SmartInvest Scout";
-    
+
     // Only fetch recent searches if user is logged in
     if (user) {
       const fetchRecentSearches = async () => {
@@ -162,19 +189,19 @@ const Dashboard: React.FC = () => {
         try {
           const searches = await getRecentSearches(5, user.id);
           // Convert timestamp strings to Date objects for display
-          const formattedSearches = searches.map(search => ({
+          const formattedSearches = searches.map((search) => ({
             id: search.id,
             query: search.query,
-            timestamp: new Date(search.timestamp)
+            timestamp: new Date(search.timestamp),
           }));
           setRecentSearches(formattedSearches);
         } catch (error) {
-          console.error('Error fetching recent searches:', error);
+          console.error("Error fetching recent searches:", error);
         } finally {
           setIsLoadingSearches(false);
         }
       };
-      
+
       fetchRecentSearches();
     } else {
       // For logged-out users, we don't need to fetch anything
@@ -191,7 +218,9 @@ const Dashboard: React.FC = () => {
 
   const handleSuggestionClick = (suggestion: string) => {
     // Extract just the symbol if it's in the format "SYMBOL - Company Name"
-    const query = suggestion.includes(' - ') ? suggestion.split(' - ')[0] : suggestion;
+    const query = suggestion.includes(" - ")
+      ? suggestion.split(" - ")[0]
+      : suggestion;
     // Save search query to history only if user is logged in
     if (user) {
       saveSearchQuery(query, user.id);
@@ -207,12 +236,24 @@ const Dashboard: React.FC = () => {
   };
 
   const handleUploadClick = () => {
-    setIsUploadModalOpen(true);
+    if (user) {
+      setIsUploadModalOpen(true);
+    } else {
+      showToast({
+        title: "Login Required",
+        message: "Please log in to upload and analyze documents",
+        type: "info",
+        duration: 2000,
+      });
+    }
   };
 
   const handleUploadComplete = (summary: DocumentSummary) => {
     // Store the summary in session storage to pass to the Summary page
-    sessionStorage.setItem(STORAGE_KEYS.DOCUMENT_SUMMARY, JSON.stringify(summary));
+    sessionStorage.setItem(
+      STORAGE_KEYS.DOCUMENT_SUMMARY,
+      JSON.stringify(summary)
+    );
     navigate(ROUTES.SUMMARY);
   };
 
@@ -233,26 +274,38 @@ const Dashboard: React.FC = () => {
             <div className="bg-white rounded-xl shadow-sm p-6">
               <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
                 <SearchSuggestions
-                onSuggestionClick={handleSuggestionClick}
-                placeholder="Search stocks, companies, or investment topics..."
-                minQueryLength={2}
-                debounceDelay={300}
-              />
+                  onSuggestionClick={handleSuggestionClick}
+                  placeholder="Search stocks, companies, or investment topics..."
+                  minQueryLength={2}
+                  debounceDelay={300}
+                />
               </form>
             </div>
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <QuickAction 
+              <QuickAction
                 icon={<MessageSquare />}
                 bgColor="bg-indigo-100"
                 iconColor="text-indigo-600"
                 title="Ask Anything"
                 description="Get instant answers to your investment questions"
-                onClick={() => navigate(ROUTES.CHAT)}
+                onClick={() => {
+                  if (user) {
+                    // Navigate to chat with a flag to start a new chat
+                    navigate(ROUTES.CHAT, { state: { startNewChat: true } });
+                  } else {
+                    showToast({
+                      title: "Login Required",
+                      message: "Please log in to use the chat feature",
+                      type: "info",
+                      duration: 5000,
+                    });
+                  }
+                }}
               />
-              
-              <QuickAction 
+
+              <QuickAction
                 icon={<Upload />}
                 bgColor="bg-purple-100"
                 iconColor="text-purple-600"
@@ -269,7 +322,7 @@ const Dashboard: React.FC = () => {
               </h2>
               <div className="flex flex-wrap gap-3">
                 {suggestedTopics.map((topic) => (
-                  <TopicButton 
+                  <TopicButton
                     key={topic.id}
                     topic={topic}
                     onClick={handleTopicClick}
@@ -286,7 +339,7 @@ const Dashboard: React.FC = () => {
                 </h2>
                 <div className="flex flex-wrap gap-3">
                   {trendingTopics.map((topic) => (
-                    <TopicButton 
+                    <TopicButton
                       key={topic.id}
                       topic={topic}
                       onClick={handleTopicClick}
@@ -312,7 +365,9 @@ const Dashboard: React.FC = () => {
                 {user ? (
                   // Show recent searches for logged-in users
                   isLoadingSearches ? (
-                    <div className="text-center py-4 text-gray-500">Loading recent searches...</div>
+                    <div className="text-center py-4 text-gray-500">
+                      Loading recent searches...
+                    </div>
                   ) : recentSearches.length > 0 ? (
                     recentSearches.map((search) => (
                       <motion.button

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../hooks/useToast";
 import {
   ArrowLeft,
   MessageSquare,
@@ -43,7 +45,9 @@ interface InsightsData {
 
 const SearchResults: React.FC = () => {
   const navigate = useNavigate();
-  const { query } = useParams();
+  const { query } = useParams<{ query: string }>();
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [insights, setInsights] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -115,18 +119,27 @@ const SearchResults: React.FC = () => {
             icon="external-link"
             primary
             onClick={() => {
-              // Navigate to chat page with context and initial question
-              // Format a more specific question based on the insights
-              const specificQuestion = insights?.market_summary?.key_drivers
-                ? `Tell me more about ${insights?.company} and how ${insights?.market_summary?.key_drivers} is affecting its performance`
-                : `Tell me more about ${insights?.company}`;
+              if (user) {
+                // Navigate to chat page with context and initial question
+                // Format a more specific question based on the insights
+                const specificQuestion = insights?.market_summary?.key_drivers
+                  ? `Tell me more about ${insights?.company} and how ${insights?.market_summary?.key_drivers} is affecting its performance`
+                  : `Tell me more about ${insights?.company}`;
 
-              navigate("/chat", {
-                state: {
-                  initialQuestion: specificQuestion,
-                  context: insights,
-                },
-              });
+                navigate("/chat", {
+                  state: {
+                    initialQuestion: specificQuestion,
+                    context: insights,
+                  },
+                });
+              } else {
+                showToast({
+                  title: "Login Required",
+                  message: "Please log in to ask questions about this company",
+                  type: "info",
+                  duration: 2000,
+                });
+              }
             }}
           />
         </div>

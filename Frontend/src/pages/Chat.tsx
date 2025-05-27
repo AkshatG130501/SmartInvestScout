@@ -15,7 +15,7 @@ import {
   ChatHeader,
   ChatInput,
   EmptyChatState,
-  TypingIndicator
+  TypingIndicator,
 } from "../components/chat/ChatComponents";
 
 // Hooks and Contexts
@@ -24,8 +24,17 @@ import { useProfile } from "../contexts/ProfileContext";
 
 // API and Types
 import { getPersonalizedChatResponse } from "../lib/api/chat";
-import { createConversation, addMessageToConversation, getActiveConversation } from "../lib/api/conversations";
-import { Conversation, ConversationMessage, ChatResponse } from "../lib/api/types";
+import {
+  createConversation,
+  addMessageToConversation,
+  getActiveConversation,
+  deactivateUserConversations,
+} from "../lib/api/conversations";
+import {
+  Conversation,
+  ConversationMessage,
+  ChatResponse,
+} from "../lib/api/types";
 import { Message } from "../types/chat";
 import { ROUTES } from "../lib/constants";
 
@@ -58,7 +67,8 @@ const Chat: React.FC = () => {
   const [showContextInfo, setShowContextInfo] = useState<number | null>(null);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [showConversationSidebar, setShowConversationSidebar] = useState(false);
-  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [activeConversation, setActiveConversation] =
+    useState<Conversation | null>(null);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -69,21 +79,29 @@ const Chat: React.FC = () => {
   useEffect(() => {
     setShowProfilePrompt(!!user && !profile);
   }, [user, profile]);
-  
+
   // Handle initial question with context from SearchResults page
   useEffect(() => {
     // Check if we have an initial question and context from location state
     if (location.state?.initialQuestion && location.state?.context) {
       const { initialQuestion, context } = location.state;
-      
+
       const handleInitialQuestion = async () => {
         if (!user?.id) return;
-        
+
         // Always start a new chat when coming from "Ask about this"
         setActiveConversation(null);
         setMessages([]);
         setIsTyping(true);
-        
+
+        // Explicitly deactivate any previous active conversations in the database
+        try {
+          await deactivateUserConversations(user.id);
+        } catch (error) {
+          console.error("Error deactivating previous conversations:", error);
+          // Continue with the new conversation even if deactivation fails
+        }
+
         // Add a system message indicating we're continuing from insights
         const systemMessage: Message = {
           id: uuidv4(),
@@ -91,7 +109,7 @@ const Chat: React.FC = () => {
           content: `You're now chatting about ${context.company}. I have information about its recent performance and market trends.`,
           timestamp: new Date(),
         };
-        
+
         // Add the user's question to the chat
         const userMessage: Message = {
           id: uuidv4(),
@@ -99,35 +117,41 @@ const Chat: React.FC = () => {
           content: initialQuestion,
           timestamp: new Date(),
         };
-        
+
         setMessages([systemMessage, userMessage]);
-        
+
         try {
           // Format context into a structured string for the API
-          const contextString = 
+          const contextString =
             `Context about ${context.company}:\n` +
             `Company: ${context.company}\n` +
-            `Market Summary: ${context.market_summary?.summary || 'Not available'}\n` +
-            `Key Drivers: ${context.market_summary?.key_drivers || 'Not available'}\n` +
-            `Market Reaction: ${context.market_summary?.market_reaction || 'Not available'}`;
-          
+            `Market Summary: ${
+              context.market_summary?.summary || "Not available"
+            }\n` +
+            `Key Drivers: ${
+              context.market_summary?.key_drivers || "Not available"
+            }\n` +
+            `Market Reaction: ${
+              context.market_summary?.market_reaction || "Not available"
+            }`;
+
           // Get personalized response from backend with context
           const questionWithContext = `${contextString}\n\nQuestion: ${initialQuestion}`;
           const response = await getPersonalizedChatResponse(
             user.id,
             questionWithContext
           );
-          
+
           // Create a new conversation with the context
           const newConversation = await createConversation(
             user.id,
             initialQuestion,
             response.content,
-            response.personalizationContext
+            response.personalizationContext ?? undefined
           );
-          
+
           setActiveConversation(newConversation);
-          
+
           // Add AI message to UI
           const aiMessage: Message = {
             id: uuidv4(),
@@ -136,27 +160,28 @@ const Chat: React.FC = () => {
             timestamp: new Date(),
             personalizationContext: response.personalizationContext,
           };
-          
-          setMessages(prev => [...prev, aiMessage]);
+
+          setMessages((prev) => [...prev, aiMessage]);
         } catch (error) {
           console.error("Error processing initial question:", error);
-          
+
           // Show error message
           const errorMessage: Message = {
             id: uuidv4(),
             type: "system",
-            content: "Sorry, there was an error processing your request. Please try again.",
+            content:
+              "Sorry, there was an error processing your request. Please try again.",
             timestamp: new Date(),
           };
-          
-          setMessages(prev => [...prev, errorMessage]);
+
+          setMessages((prev) => [...prev, errorMessage]);
         } finally {
           setIsTyping(false);
         }
       };
-      
+
       handleInitialQuestion();
-      
+
       // Clear location state to prevent duplicate handling on re-renders
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -187,21 +212,42 @@ const Chat: React.FC = () => {
   // Effect to load active conversation if any
   useEffect(() => {
     const loadActiveConversation = async () => {
+      // Skip loading active conversation if we're handling an initial question from SearchResults
+      // or if startNewChat flag is set
+      if (
+        (location.state?.initialQuestion && location.state?.context) ||
+        location.state?.startNewChat
+      ) {
+        // If startNewChat flag is set, deactivate all previous conversations
+        if (location.state?.startNewChat && user?.id) {
+          try {
+            await deactivateUserConversations(user.id);
+            // Clear location state to prevent duplicate handling on re-renders
+            navigate(location.pathname, { replace: true, state: {} });
+          } catch (error) {
+            console.error("Error deactivating previous conversations:", error);
+          }
+        }
+        return; // Don't load active conversation
+      }
+
       if (user?.id) {
         try {
           const conversation = await getActiveConversation(user.id);
           if (conversation) {
             setActiveConversation(conversation);
-            
+
             // Format messages from conversation
-            const formattedMessages: Message[] = conversation.messages.map((msg: ConversationMessage) => ({
-              id: uuidv4(),
-              type: msg.role === "user" ? "user" : "ai",
-              content: msg.content,
-              timestamp: new Date(msg.timestamp || new Date()),
-              personalizationContext: msg.personalization_context || null
-            }));
-            
+            const formattedMessages: Message[] = conversation.messages.map(
+              (msg: ConversationMessage) => ({
+                id: uuidv4(),
+                type: msg.role === "user" ? "user" : "ai",
+                content: msg.content,
+                timestamp: new Date(msg.timestamp || new Date()),
+                personalizationContext: msg.personalization_context || null,
+              })
+            );
+
             setMessages(formattedMessages);
           }
         } catch (error) {
@@ -211,16 +257,16 @@ const Chat: React.FC = () => {
     };
 
     loadActiveConversation();
-  }, [user]);
+  }, [user, location.state]);
 
   /**
    * Handle form submission
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!input.trim() || isTyping || !user?.id) return;
-    
+
     // Add user message
     const userMessage: Message = {
       id: uuidv4(),
@@ -228,29 +274,26 @@ const Chat: React.FC = () => {
       content: input,
       timestamp: new Date(),
     };
-    
+
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsTyping(true);
-    
+
     try {
       let conversationId = activeConversation?.id;
-      let response: ChatResponse;
-      
-      // Get AI response first so we have the content for the conversation
-      response = await getPersonalizedChatResponse(
+      const response: ChatResponse = await getPersonalizedChatResponse(
         user.id,
         input,
         conversationId
       );
-      
+
       if (!conversationId) {
         // Create a new conversation with the message and response
         const newConversation = await createConversation(
           user.id,
           input,
           response.content,
-          response.personalizationContext
+          response.personalizationContext ?? undefined
         );
         conversationId = newConversation.id;
         setActiveConversation(newConversation);
@@ -260,10 +303,10 @@ const Chat: React.FC = () => {
           conversationId,
           input,
           response.content,
-          response.personalizationContext
+          response.personalizationContext ?? undefined
         );
       }
-      
+
       // Add AI message to UI
       const aiMessage: Message = {
         id: uuidv4(),
@@ -272,19 +315,20 @@ const Chat: React.FC = () => {
         timestamp: new Date(),
         personalizationContext: response.personalizationContext,
       };
-      
+
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("Error getting chat response:", error);
-      
+
       // Add error message
       const errorMessage: Message = {
         id: uuidv4(),
         type: "system",
-        content: "Sorry, there was an error processing your request. Please try again.",
+        content:
+          "Sorry, there was an error processing your request. Please try again.",
         timestamp: new Date(),
       };
-      
+
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsTyping(false);
@@ -336,7 +380,7 @@ const Chat: React.FC = () => {
             />
           )}
           {messages.length === 0 ? (
-            <EmptyChatState 
+            <EmptyChatState
               suggestedPrompts={SUGGESTED_PROMPTS}
               onPromptClick={handleSuggestedPromptClick}
             />
@@ -374,16 +418,18 @@ const Chat: React.FC = () => {
         onSelectConversation={(conversation) => {
           // Load the selected conversation
           setActiveConversation(conversation);
-          
+
           // Format messages from conversation
-          const formattedMessages: Message[] = conversation.messages.map((msg: ConversationMessage) => ({
-            id: uuidv4(),
-            type: msg.role === "user" ? "user" : "ai",
-            content: msg.content,
-            timestamp: new Date(msg.timestamp || new Date()),
-            personalizationContext: msg.personalization_context || null
-          }));
-          
+          const formattedMessages: Message[] = conversation.messages.map(
+            (msg: ConversationMessage) => ({
+              id: uuidv4(),
+              type: msg.role === "user" ? "user" : "ai",
+              content: msg.content,
+              timestamp: new Date(msg.timestamp || new Date()),
+              personalizationContext: msg.personalization_context || null,
+            })
+          );
+
           setMessages(formattedMessages);
           setShowConversationSidebar(false);
         }}
