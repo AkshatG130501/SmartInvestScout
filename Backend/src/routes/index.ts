@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { healthCheckRouter } from './healthCheck';
-import { insightsRouter } from './insights';
-import { documentsRouter } from './documents';
-import { profilesRouter } from './profiles';
-import { chatRouter } from './chat';
-import { conversationsRouter } from './conversations';
-import { searchRouter } from './search';
+import insightsRouter  from './insights';
+import documentsRouter from './documents';
+import profilesRouter from './profiles';
+import chatRouter from './chat';
+import conversationsRouter from './conversations';
+import searchRouter from './search';
 import alertsRouter from './alerts';
 import notificationsRouter from './notifications';
 

@@ -1,28 +1,17 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router } from 'express';
 import multer from 'multer';
-import fs from 'fs';
 import path from 'path';
-import { logger } from '../utils/logger';
-import { extractTextFromDocument } from '../utils/documentParser';
-import { PerplexityService } from '../utils/perplexityService';
-import PDFDocument from 'pdfkit';
-import { marked } from 'marked';
-
-// Define file interface for multer
-interface MulterFile extends Express.Multer.File {}
-
-// Define request interface with file
-interface RequestWithFile extends Request {
-  file?: MulterFile;
-}
+import fs from 'fs';
+import { DocumentsController } from '../controllers/documentsController';
 
 const router = Router();
+const documentsController = DocumentsController.getInstance();
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (
-    req: Request,
-    file: MulterFile,
+    req: Express.Request,
+    file: Express.Multer.File,
     cb: (error: Error | null, destination: string) => void
   ) => {
     const uploadDir = path.join(__dirname, '../../uploads');
@@ -33,8 +22,8 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (
-    req: Request,
-    file: MulterFile,
+    req: Express.Request,
+    file: Express.Multer.File,
     cb: (error: Error | null, filename: string) => void
   ) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -42,7 +31,11 @@ const storage = multer.diskStorage({
   },
 });
 
-const fileFilter = (req: Request, file: MulterFile, cb: multer.FileFilterCallback) => {
+const fileFilter = (
+  req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
   // Accept only PDF, DOCX, and TXT files
   if (
     file.mimetype === 'application/pdf' ||
@@ -65,318 +58,10 @@ const upload = multer({
 router.post(
   '/analyze',
   upload.single('document'),
-  async (req: RequestWithFile, res: Response, next: NextFunction) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-      }
-
-      logger.info(`Processing document: ${req.file.originalname}`);
-
-      // Extract text from the uploaded document
-      const text = await extractTextFromDocument(req.file.path, req.file.mimetype);
-
-      // Get summary from Perplexity
-      const perplexityService = PerplexityService.getInstance();
-      const summary = await perplexityService.getDocumentSummary(text);
-
-      // Clean up the uploaded file after processing
-      fs.unlinkSync(req.file.path);
-
-      return res.status(200).json(summary);
-    } catch (error) {
-      logger.error('Error analyzing document:', error);
-      next(error);
-    }
-  }
+  documentsController.analyzeDocument.bind(documentsController)
 );
 
 // Route to generate PDF from summary
-router.post('/generate-pdf', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { summary } = req.body;
-    if (!summary) {
-      return res.status(400).json({ error: 'No summary provided' });
-    }
+router.post('/generate-pdf', documentsController.generatePDF.bind(documentsController));
 
-    // Create a new PDF document with margins
-    const doc = new PDFDocument({
-      margins: {
-        top: 60,
-        bottom: 60,
-        left: 60,
-        right: 60,
-      },
-      size: 'A4',
-      info: {
-        Title: 'Document Summary',
-        Author: 'SmartInvestScout',
-        Subject: summary.documentType,
-      },
-    });
-
-    // Set response headers
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=document-summary.pdf');
-
-    // Pipe the PDF directly to the response
-    doc.pipe(res);
-
-    // Define colors (GitHub-inspired)
-    const colors = {
-      primary: '#0366d6',
-      dark: '#24292e',
-      gray: '#586069',
-      lightGray: '#f6f8fa',
-      border: '#e1e4e8',
-      heading: '#1b1f23',
-      code: '#f6f8fa',
-      codeText: '#d73a49'
-    };
-
-    // Helper function to check if we need a new page
-    const checkPageBreak = (requiredSpace = 50) => {
-      if (doc.y + requiredSpace > doc.page.height - doc.page.margins.bottom) {
-        doc.addPage();
-      }
-    };
-
-    // Helper function to add horizontal line
-    const addHorizontalLine = (color = colors.border, thickness = 1) => {
-      const y = doc.y + 5;
-      doc.strokeColor(color)
-         .lineWidth(thickness)
-         .moveTo(doc.page.margins.left, y)
-         .lineTo(doc.page.width - doc.page.margins.right, y)
-         .stroke();
-      doc.moveDown(0.5);
-    };
-
-    // Add header with improved styling
-    const headerHeight = 80;
-    doc.rect(0, 0, doc.page.width, headerHeight).fill(colors.primary);
-    
-    // Add title with better positioning
-    doc.fontSize(28)
-       .fillColor('white')
-       .text('Document Summary', doc.page.margins.left, 25, { 
-         align: 'left',
-         width: doc.page.width - doc.page.margins.left - doc.page.margins.right
-       });
-    
-    // Add subtitle
-    doc.fontSize(14)
-       .fillColor('#e1e4e8')
-       .text('Generated by SmartInvestScout', doc.page.margins.left, 55);
-
-    // Set initial position after header
-    doc.y = headerHeight + 30;
-
-    // Add document type section with improved styling
-    checkPageBreak(60);
-    doc.fontSize(18)
-       .fillColor(colors.heading)
-       .text('Document Type', { underline: false });
-    
-    addHorizontalLine();
-    
-    doc.fontSize(14)
-       .fillColor(colors.dark)
-       .text(summary.documentType, { indent: 10 });
-    doc.moveDown(2);
-
-    // Parse markdown content
-    const tokens = marked.lexer(summary.dynamicSummary);
-    
-    // Helper function to render different markdown elements
-    const renderToken = (token: any, level = 0) => {
-      const indent = level * 20;
-      
-      switch (token.type) {
-        case 'heading':
-          checkPageBreak(40);
-          const headingSizes = [24, 20, 18, 16, 14, 12];
-          const headingSize = headingSizes[Math.min(token.depth - 1, 5)];
-          
-          // Add some space before heading (except h1)
-          if (token.depth > 1) {
-            doc.moveDown(1.5);
-          }
-          
-          doc.fontSize(headingSize)
-             .fillColor(colors.heading)
-             .text(token.text, { 
-               indent: indent,
-               lineGap: 2
-             });
-          
-          // Add underline for h1 and h2
-          if (token.depth <= 2) {
-            addHorizontalLine(token.depth === 1 ? colors.dark : colors.border, token.depth === 1 ? 2 : 1);
-          } else {
-            doc.moveDown(0.5);
-          }
-          break;
-
-        case 'paragraph':
-          checkPageBreak(30);
-          doc.fontSize(12)
-             .fillColor(colors.dark)
-             .text(token.text, {
-               indent: indent,
-               lineGap: 3,
-               align: 'left'
-             });
-          doc.moveDown(1);
-          break;
-
-        case 'list':
-          checkPageBreak(20);
-          doc.moveDown(0.5);
-          
-          token.items.forEach((item: any, index: number) => {
-            checkPageBreak(25);
-            
-            const bullet = token.ordered ? `${index + 1}.` : '•';
-            const bulletWidth = token.ordered ? 20 : 15;
-            
-            // Draw bullet/number
-            doc.fontSize(12)
-               .fillColor(colors.gray)
-               .text(bullet, doc.page.margins.left + indent, doc.y, {
-                 width: bulletWidth,
-                 align: 'right'
-               });
-            
-            // Draw item text
-            doc.fontSize(12)
-               .fillColor(colors.dark)
-               .text(item.text, doc.page.margins.left + indent + bulletWidth + 5, doc.y - 14, {
-                 width: doc.page.width - doc.page.margins.left - doc.page.margins.right - indent - bulletWidth - 5,
-                 lineGap: 2
-               });
-            
-            doc.moveDown(0.8);
-          });
-          doc.moveDown(0.5);
-          break;
-
-        case 'blockquote':
-          checkPageBreak(30);
-          const quoteX = doc.page.margins.left + indent + 15;
-          const quoteWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right - indent - 15;
-          
-          // Draw left border for blockquote
-          doc.rect(doc.page.margins.left + indent + 5, doc.y, 3, 20)
-             .fill(colors.border);
-          
-          doc.fontSize(12)
-             .fillColor(colors.gray)
-             .text(token.text, quoteX, doc.y, {
-               width: quoteWidth,
-               lineGap: 3
-             });
-          doc.moveDown(1);
-          break;
-
-        case 'code':
-          checkPageBreak(40);
-          const codeX = doc.page.margins.left + indent;
-          const codeWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right - indent;
-          
-          // Background for code block
-          doc.rect(codeX, doc.y - 5, codeWidth, 30)
-             .fill(colors.code)
-             .stroke(colors.border);
-          
-          doc.fontSize(10)
-             .fillColor(colors.codeText)
-             .text(token.text, codeX + 10, doc.y, {
-               width: codeWidth - 20,
-               lineGap: 1
-             });
-          doc.moveDown(1.5);
-          break;
-
-        case 'hr':
-          checkPageBreak(20);
-          addHorizontalLine(colors.border, 2);
-          doc.moveDown(1);
-          break;
-
-        case 'table':
-          // Simple table rendering (you can enhance this further)
-          checkPageBreak(100);
-          doc.fontSize(10).fillColor(colors.dark);
-          
-          if (token.header) {
-            // Table header
-            doc.fontSize(11).fillColor(colors.heading);
-            const headerText = token.header.map((h: any) => h.text).join(' | ');
-            doc.text(headerText, { indent: indent });
-            addHorizontalLine();
-          }
-          
-          // Table rows
-          if (token.rows) {
-            token.rows.forEach((row: any) => {
-              const rowText = row.map((cell: any) => cell.text).join(' | ');
-              doc.fontSize(10).fillColor(colors.dark).text(rowText, { indent: indent });
-              doc.moveDown(0.3);
-            });
-          }
-          doc.moveDown(1);
-          break;
-
-        case 'space':
-          doc.moveDown(0.5);
-          break;
-
-        default:
-          // Handle any other token types
-          if (token.text || token.raw) {
-            doc.fontSize(12)
-               .fillColor(colors.dark)
-               .text(token.text || token.raw, { indent: indent });
-            doc.moveDown(0.5);
-          }
-      }
-    };
-
-    // Render all tokens
-    tokens.forEach((token: any) => {
-      renderToken(token);
-    });
-
-    // Add a simple footer on the last page only
-    const currentY = doc.y;
-    const footerY = doc.page.height - 40;
-    
-    // Only add footer if there's space, otherwise add new page
-    if (currentY > footerY - 30) {
-      doc.addPage();
-    }
-    
-    // Add footer line
-    doc.strokeColor(colors.border)
-       .lineWidth(1)
-       .moveTo(doc.page.margins.left, doc.page.height - 40)
-       .lineTo(doc.page.width - doc.page.margins.right, doc.page.height - 40)
-       .stroke();
-    
-    // Add generation timestamp
-    doc.fontSize(9)
-       .fillColor(colors.gray)
-       .text(`Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 
-              doc.page.margins.left, doc.page.height - 30, {
-         align: 'center'
-       });
-
-    doc.end();
-  } catch (error) {
-    logger.error('Error generating PDF:', error);
-    next(error);
-  }
-});
-
-export const documentsRouter = router;
+export default router;
