@@ -14,8 +14,6 @@ SmartInvestScout is an intelligent investment assistant platform designed to hel
 - [Technologies](#technologies)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Overview
 
