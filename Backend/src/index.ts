@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { config } from 'dotenv';
-import { errorHandler } from './middleware/errorHandler';
+import { errorHandler } from './middlewares/errorHandler';
 import { logger } from './utils/logger';
 import routes from './routes';
 import { initializeScheduler } from './services/schedulerService';

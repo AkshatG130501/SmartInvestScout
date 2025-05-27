@@ -5,6 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '../utils/logger';
+import { PricingSubscriber } from '../types/notifications';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL || '';
@@ -12,23 +13,13 @@ const supabaseKey = process.env.SUPABASE_SERVICE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
- * Interface for pricing notification subscriber
- */
-export interface PricingSubscriber {
-  id?: string;
-  email: string;
-  created_at?: string;
-  updated_at?: string;
-  notification_sent?: boolean;
-  notification_sent_at?: string;
-}
-
-/**
  * Subscribe a user to pricing notifications
  * @param email User's email address
  * @returns Success status and message
  */
-export async function subscribeToPricingNotifications(email: string): Promise<{ success: boolean; message: string }> {
+export async function subscribeToPricingNotifications(
+  email: string
+): Promise<{ success: boolean; message: string }> {
   try {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -85,7 +76,9 @@ export async function subscribeToPricingNotifications(email: string): Promise<{ 
  * @param includeNotified Whether to include subscribers who have already been notified
  * @returns Array of pricing notification subscribers
  */
-export async function getPricingSubscribers(includeNotified: boolean = false): Promise<PricingSubscriber[]> {
+export async function getPricingSubscribers(
+  includeNotified: boolean = false
+): Promise<PricingSubscriber[]> {
   try {
     let query = supabase
       .from('pricing_notification_subscribers')
@@ -119,9 +112,9 @@ export async function markSubscribersAsNotified(subscriberIds: string[]): Promis
   try {
     const { error } = await supabase
       .from('pricing_notification_subscribers')
-      .update({ 
+      .update({
         notification_sent: true,
-        notification_sent_at: new Date().toISOString()
+        notification_sent_at: new Date().toISOString(),
       })
       .in('id', subscriberIds);
 
