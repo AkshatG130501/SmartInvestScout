@@ -2,8 +2,6 @@
 
 SmartInvestScout is an intelligent investment assistant platform designed to help users make informed investment decisions through personalized insights, real-time market data, and AI-powered analysis.
 
-![SmartInvestScout](https://example.com/smartinvestscout-logo.png)
-
 ## Table of Contents
 
 - [Overview](#overview)
@@ -17,9 +15,16 @@ SmartInvestScout is an intelligent investment assistant platform designed to hel
 
 ## Overview
 
-SmartInvestScout is a comprehensive investment platform that combines real-time market data, AI-powered analysis, and personalized recommendations to help users make better investment decisions. The platform provides a user-friendly interface for exploring market insights, tracking companies, setting up alerts, and getting personalized investment advice through an AI chat assistant.
+SmartInvest Scout is an AI-powered investing assistant that helps users make smarter, faster, and more personalized investment decisions. It simplifies market research, analyzes financial documents, delivers proactive alerts, and enables intelligent Q&A — all in one intuitive interface.
 
 ## Features
+
+- 🧠 **Ask Scout**: Natural language Q&A about any stock or market topic
+- 📊 **Smart Insights**: Personalized summaries based on your portfolio or watchlist
+- 📎 **Document Upload**: Upload and analyze PDFs like annual reports or earnings calls
+- 🔔 **Proactive Alerts**: Get notified of key events affecting your holdings and interests
+- 🔍 **Stock & Topic Analysis**: Search by company or sector and get AI-curated insights
+- 📂 **Portfolio Sync** _(Coming soon)_: Connect with broker APIs to personalize your experience
 
 ### Dashboard
 
@@ -59,6 +64,15 @@ SmartInvestScout is a comprehensive investment platform that combines real-time 
 - Security settings
 - Notification preferences
 - Account management
+
+## 💡 Why SmartInvest Scout?
+
+Most brokerage platforms show prices, charts, and a few stats. SmartInvest Scout goes further by acting like your **AI research analyst**, helping you:
+
+- Cut through noise in financial documents
+- Discover relevant insights and trends
+- Get alerts for what truly matters
+- Understand the "why" behind market moves
 
 ## Architecture
 
