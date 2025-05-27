@@ -1,48 +1,13 @@
 import axios from 'axios';
 import { MarketEvent } from '../types/alerts';
+import {
+  SonarEvent,
+  SonarResponse,
+  PerplexityMessage,
+  PerplexityChoice,
+  PerplexityResponse,
+} from '../types/sonar';
 import dotenv from 'dotenv';
-
-// Define interfaces for Sonar API responses
-interface SonarEvent {
-  event_title: string;
-  summary: string;
-  impact_keywords?: string[];
-  related_companies?: string[];
-  sectors?: string[];
-  timestamp?: string;
-}
-
-interface SonarResponse {
-  events: SonarEvent[];
-  error?: string;
-  status?: string;
-  message?: string;
-}
-
-// Define interfaces for Perplexity API responses
-interface PerplexityMessage {
-  role: string;
-  content: string;
-}
-
-interface PerplexityChoice {
-  message: PerplexityMessage;
-  index: number;
-  finish_reason: string;
-}
-
-interface PerplexityResponse {
-  id: string;
-  choices: PerplexityChoice[];
-  created: number;
-  model: string;
-  object: string;
-  usage: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
 
 dotenv.config();
 
@@ -192,13 +157,13 @@ export async function querySonarForEvents(timeframe: number = 4): Promise<Market
       try {
         let content = responseData.choices[0].message.content;
         console.log(`[ALERT_FLOW] 7. Raw content from API:`, content);
-        
+
         // Remove markdown code blocks if present
         if (content.includes('```json')) {
           content = content.replace(/```json\n/g, '').replace(/```/g, '');
           console.log(`[ALERT_FLOW] 7.1. Cleaned content:`, content);
         }
-        
+
         const parsedContent = JSON.parse(content) as SonarResponse;
         console.log(`[ALERT_FLOW] 7.1. Parsed content:`, JSON.stringify(parsedContent, null, 2));
 
@@ -341,12 +306,12 @@ If no material events are found, return:
       // Parse the JSON content from the response
       try {
         let content = responseData.choices[0].message.content;
-        
+
         // Remove markdown code blocks if present
         if (content.includes('```json')) {
           content = content.replace(/```json\n/g, '').replace(/```/g, '');
         }
-        
+
         const parsedContent = JSON.parse(content) as SonarResponse;
 
         if (parsedContent && parsedContent.events && Array.isArray(parsedContent.events)) {
