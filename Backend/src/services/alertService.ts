@@ -439,26 +439,49 @@ export async function removeDuplicateAlerts(userId: string): Promise<boolean> {
  */
 export async function processMarketEvents(): Promise<number> {
   try {
-    const events = await querySonarForEvents(168); // Last 72 hours
+    // Get all user preferences first
+    const allUserPreferences = await getAllUserAlertPreferences();
+
+    // Collect unique companies and sectors from all user preferences
+    const uniqueCompanies = new Set<string>();
+    const uniqueSectors = new Set<string>();
+
+    allUserPreferences.forEach((preferences) => {
+      if (Array.isArray(preferences.companies)) {
+        preferences.companies.forEach((company: string) => uniqueCompanies.add(company));
+      }
+      if (Array.isArray(preferences.sectors)) {
+        preferences.sectors.forEach((sector: string) => uniqueSectors.add(sector));
+      }
+    });
+
+    // Convert Sets to Arrays
+    const companies = Array.from(uniqueCompanies);
+    const sectors = Array.from(uniqueSectors);
+
+    // If no companies or sectors to monitor, return early
+    if (companies.length === 0 && sectors.length === 0) {
+      console.log('[ALERT_FLOW] No companies or sectors to monitor');
+      return 0;
+    }
+
+    // Fetch events only for the companies and sectors users are interested in
+    const events = await querySonarForEvents(companies, sectors, 168); // Last 168 hours (7 days)
 
     if (events.length === 0) {
       return 0;
     }
 
-    // 2. Store events in database
+    // Store events in database
     const eventIds = await storeMarketEvents(events);
 
     // Add IDs to events
-    const eventsWithIds = events.map((event, index) => {
-      const eventWithId = {
-        ...event,
-        id: eventIds[index],
-      };
-      return eventWithId;
-    });
-    const allUserPreferences = await getAllUserAlertPreferences();
+    const eventsWithIds = events.map((event, index) => ({
+      ...event,
+      id: eventIds[index],
+    }));
 
-    // 4. Create alerts for each user
+    // Create alerts for each user
     let totalAlerts = 0;
 
     for (const preferences of allUserPreferences) {

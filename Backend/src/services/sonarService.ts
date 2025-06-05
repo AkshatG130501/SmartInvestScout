@@ -1,12 +1,6 @@
 import axios from 'axios';
 import { MarketEvent } from '../types/alerts';
-import {
-  SonarEvent,
-  SonarResponse,
-  PerplexityMessage,
-  PerplexityChoice,
-  PerplexityResponse,
-} from '../types/sonar';
+import { SonarEvent, SonarResponse, PerplexityResponse } from '../types/sonar';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -14,70 +8,28 @@ dotenv.config();
 const SONAR_API_KEY = process.env.PERPLEXITY_API_KEY;
 const SONAR_API_URL = 'https://api.perplexity.ai';
 
-// List of top Indian companies to monitor
-const TOP_INDIAN_COMPANIES = [
-  'Reliance Industries',
-  'TCS',
-  'HDFC Bank',
-  'Infosys',
-  'ICICI Bank',
-  'HUL',
-  'Bharti Airtel',
-  'SBI',
-  'Bajaj Finance',
-  'Kotak Mahindra Bank',
-  'Adani Enterprises',
-  'ITC',
-  'L&T',
-  'Axis Bank',
-  'Asian Paints',
-  'Maruti Suzuki',
-  'Titan',
-  'Bajaj Finserv',
-  'Sun Pharma',
-  'Tata Motors',
-  'Tata Steel',
-  'NTPC',
-  'M&M',
-  'Power Grid',
-  'Tech Mahindra',
-];
-
-// Key sectors to monitor
-const KEY_SECTORS = [
-  'Banking',
-  'IT',
-  'Pharma',
-  'Auto',
-  'FMCG',
-  'Energy',
-  'Telecom',
-  'Infrastructure',
-  'PSU Banks',
-  'Green Energy',
-  'Manufacturing',
-  'Real Estate',
-  'Insurance',
-  'Metals',
-  'Oil & Gas',
-];
-
 /**
  * Queries Sonar API for recent market events
+ * @param companies List of companies to monitor
+ * @param sectors List of sectors to monitor
  * @param timeframe Time period to look back (in hours)
  * @returns Array of parsed market events
  */
-export async function querySonarForEvents(timeframe: number = 4): Promise<MarketEvent[]> {
+export async function querySonarForEvents(
+  companies: string[],
+  sectors: string[],
+  timeframe: number = 4
+): Promise<MarketEvent[]> {
   console.log(`[ALERT_FLOW] 1. Starting querySonarForEvents with timeframe: ${timeframe} hours`);
   try {
     // Create a prompt for Sonar that includes context about Indian markets
     console.log(
-      `[ALERT_FLOW] 2. Creating prompt with ${TOP_INDIAN_COMPANIES.length} companies and ${KEY_SECTORS.length} sectors`
+      `[ALERT_FLOW] 2. Creating prompt with ${companies.length} companies and ${sectors.length} sectors`
     );
     const prompt = `Monitor and summarize important events for the following Indian companies in the past ${timeframe} hours:
-    ${TOP_INDIAN_COMPANIES.join(', ')}
+    ${companies.join(', ')}
     
-    Also monitor these sectors: ${KEY_SECTORS.join(', ')}
+    Also monitor these sectors: ${sectors.join(', ')}
     
     For each material event, explain:
     1. What happened (be specific with numbers and facts)
@@ -242,8 +194,6 @@ export async function queryEntitySpecificEvents(
 You are a financial analyst assistant. Summarize material market-moving events for Indian stocks and sectors.
 
 Focus on the following:
-- Companies: ${TOP_INDIAN_COMPANIES.join(', ')}
-- Sectors: ${KEY_SECTORS.join(', ')}
 - Timeframe: past ${timeframe} hours
 
 Instructions:
